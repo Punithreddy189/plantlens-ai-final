@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/windowBackground"
+    android:padding="16dp">
+
+    <!-- Search input TextInputLayout -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/searchLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Search plant or scientific name..."
+        app:startIconDrawable="@android:drawable/ic_menu_search"
+        app:endIconMode="clear_text"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/sortButton">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/librarySearchInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Alpha Sort Button -->
+    <ImageButton
+        android:id="@+id/sortButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@android:drawable/ic_menu_sort_alphabetically"
+        app:tint="@color/primary"
+        android:backgroundTint="@color/accent_light"
+        android:background="@drawable/circle_button_bg"
+        android:layout_marginStart="8dp"
+        android:contentDescription="Sort Alphabetical"
+        app:layout_constraintTop_toTopOf="@id/searchLayout"
+        app:layout_constraintBottom_toBottomOf="@id/searchLayout"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Category scroll tab bar -->
+    <HorizontalScrollView
+        android:id="@+id/categoryScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/searchLayout">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingVertical="4dp">
+
+            <!-- Category Chips -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chipAll"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="All"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/primary"
+                android:layout_marginEnd="6dp"
+                app:cornerRadius="18dp"
+                style="@style/Widget.Material3.Button"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chipIndoor"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Indoor"
+                android:textSize="12sp"
+                android:textColor="?attr/colorOnSurface"
+                android:backgroundTint="?attr/colorSurface"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp"
+                android:layout_marginEnd="6dp"
+                app:cornerRadius="18dp"
+                style="@style/Widget.Material3.Button.OutlinedButton"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chipSucculent"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Succulent"
+                android:textSize="12sp"
+                android:textColor="?attr/colorOnSurface"
+                android:backgroundTint="?attr/colorSurface"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp"
+                android:layout_marginEnd="6dp"
+                app:cornerRadius="18dp"
+                style="@style/Widget.Material3.Button.OutlinedButton"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chipOutdoor"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Outdoor"
+                android:textSize="12sp"
+                android:textColor="?attr/colorOnSurface"
+                android:backgroundTint="?attr/colorSurface"
+                app:strokeColor="?attr/colorOutline"
+                app:strokeWidth="1dp"
+                app:cornerRadius="18dp"
+                style="@style/Widget.Material3.Button.OutlinedButton"/>
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <!-- Catalog plants grid Recycler -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/plantsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/categoryScrollView"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <!-- Empty state indicators -->
+    <TextView
+        android:id="@+id/emptyStateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No plants match your search terms."
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textSize="15sp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

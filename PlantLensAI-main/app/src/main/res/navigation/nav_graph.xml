@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <!-- Home screen Fragment -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.plantlens.ai.fragments.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_home_to_scanner"
+            app:destination="@id/scannerFragment" />
+    </fragment>
+
+    <!-- Camera leaf Scanner Fragment -->
+    <fragment
+        android:id="@+id/scannerFragment"
+        android:name="com.plantlens.ai.fragments.ScannerFragment"
+        android:label="Scanner"
+        tools:layout="@layout/fragment_scanner">
+        <action
+            android:id="@+id/action_scanner_to_result"
+            app:destination="@id/plantResultFragment"
+            app:popUpTo="@id/scannerFragment"
+            app:popUpToInclusive="true"/>
+    </fragment>
+
+    <!-- Scan Results matching Fragment -->
+    <fragment
+        android:id="@+id/plantResultFragment"
+        android:name="com.plantlens.ai.fragments.PlantResultFragment"
+        android:label="Scan Result"
+        tools:layout="@layout/fragment_plant_result">
+        <action
+            android:id="@+id/action_result_to_details"
+            app:destination="@id/plantDetailsFragment" />
+        <action
+            android:id="@+id/action_result_to_scanner"
+            app:destination="@id/scannerFragment"
+            app:popUpTo="@id/plantResultFragment"
+            app:popUpToInclusive="true"/>
+        <action
+            android:id="@+id/action_result_to_saved"
+            app:destination="@id/savedPlantsFragment" />
+    </fragment>
+
+    <!-- Plants Library search Fragment -->
+    <fragment
+        android:id="@+id/libraryFragment"
+        android:name="com.plantlens.ai.fragments.LibraryFragment"
+        android:label="Library"
+        tools:layout="@layout/fragment_library">
+        <action
+            android:id="@+id/action_library_to_details"
+            app:destination="@id/plantDetailsFragment" />
+    </fragment>
+
+    <!-- Plant Details catalog profile Fragment -->
+    <fragment
+        android:id="@+id/plantDetailsFragment"
+        android:name="com.plantlens.ai.fragments.PlantDetailsFragment"
+        android:label="Plant Details"
+        tools:layout="@layout/fragment_plant_details">
+        <argument
+            android:name="plantId"
+            app:argType="string" />
+    </fragment>
+
+    <!-- Saved Garden list Fragment -->
+    <fragment
+        android:id="@+id/savedPlantsFragment"
+        android:name="com.plantlens.ai.fragments.SavedPlantsFragment"
+        android:label="Garden"
+        tools:layout="@layout/fragment_saved_plants">
+        <action
+            android:id="@+id/action_saved_to_details"
+            app:destination="@id/plantDetailsFragment" />
+    </fragment>
+
+    <!-- Profile Dashboard statistics Fragment -->
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.plantlens.ai.fragments.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_profile_to_adminAnalytics"
+            app:destination="@id/adminAnalyticsFragment" />
+    </fragment>
+
+    <!-- Admin Analytics dashboard screen -->
+    <fragment
+        android:id="@+id/adminAnalyticsFragment"
+        android:name="com.plantlens.ai.fragments.AdminAnalyticsFragment"
+        android:label="Admin Analytics"
+        tools:layout="@layout/fragment_admin_analytics" />
+
+</navigation>

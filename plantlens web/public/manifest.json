@@ -1,0 +1,16 @@
+{
+  "name": "PlantLens AI - Plant Identification & Disease Detection",
+  "short_name": "PlantLens AI",
+  "description": "Identify plants, detect diseases, and receive AI-powered care recommendations in seconds.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5FFF5",
+  "theme_color": "#2E7D32",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%232E7D32'/><path d='M50 20 C30 40 30 70 50 80 C70 70 70 40 50 20 Z' fill='%2366BB6A'/><path d='M50 20 L50 80' stroke='%231B5E20' stroke-width='4'/></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

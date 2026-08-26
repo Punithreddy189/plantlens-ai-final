@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlantLens AI - Plant Identification & Disease Detection</title>
+  <meta name="description" content="Identify plants, detect diseases, and receive AI-powered care recommendations in seconds with PlantLens AI.">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2E7D32">
+
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="/src/css/variables.css">
+  <link rel="stylesheet" href="/src/css/reset.css">
+  <link rel="stylesheet" href="/src/css/typography.css">
+  <link rel="stylesheet" href="/src/css/animations.css">
+  <link rel="stylesheet" href="/src/css/components.css">
+  <link rel="stylesheet" href="/src/css/home.css">
+  <link rel="stylesheet" href="/src/css/scanner.css">
+  <link rel="stylesheet" href="/src/css/garden.css">
+  <link rel="stylesheet" href="/src/css/settings.css">
+  <link rel="stylesheet" href="/src/css/responsive.css">
+</head>
+<body>
+
+  <!-- Floating Leaf Canvas Background -->
+  <canvas id="floating-canvas"></canvas>
+
+  <!-- Canvas Confetti Particles -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- AI Boot / Splash Screen Loader -->
+  <div id="boot-screen" class="boot-screen">
+    <svg class="boot-logo-pulse" width="72" height="72" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="48" fill="#2E7D32"/>
+      <path d="M50 20 C30 40 30 70 50 80 C70 70 70 40 50 20 Z" fill="#66BB6A"/>
+      <path d="M50 20 L50 80" stroke="#1B5E20" stroke-width="4"/>
+    </svg>
+    <h3 style="margin-top: 16px; color: var(--text-primary);">PlantLens AI</h3>
+    <div class="boot-progress-bar">
+      <div id="boot-progress-fill" class="boot-progress-fill"></div>
+    </div>
+    <p id="boot-status-text" class="text-muted" style="margin-top: 10px; font-size: 0.875rem;">Initializing AI Engine...</p>
+  </div>
+
+  <!-- Sticky Top Navigation Header -->
+  <header class="sticky-navbar">
+    <div class="nav-container">
+      <!-- Logo -->
+      <a href="#home" class="brand-logo" data-route="home">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="48" fill="#2E7D32"/>
+          <path d="M50 20 C30 40 30 70 50 80 C70 70 70 40 50 20 Z" fill="#66BB6A"/>
+          <path d="M50 20 L50 80" stroke="#1B5E20" stroke-width="4"/>
+        </svg>
+        <span>PlantLens AI</span>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav id="nav-links" class="nav-links">
+        <a href="#home" class="nav-link active" data-route="home">🏠 Home</a>
+        <a href="#scanner" class="nav-link" data-route="scanner">📷 Scanner</a>
+        <a href="#garden" class="nav-link" data-route="garden">🌱 Garden</a>
+        <a href="#settings" class="nav-link" data-route="settings">⚙️ Settings</a>
+      </nav>
+
+      <!-- Nav Actions -->
+      <div class="nav-actions">
+        <button id="quick-theme-toggle" class="icon-btn" title="Toggle Light/Dark Theme">🌙</button>
+        <div id="nav-user-btn" class="profile-avatar-btn" title="Profile Settings">👤</div>
+        <button id="mobile-menu-btn" class="icon-btn mobile-menu-btn">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main>
+    <!-- Screen Reader Live Announcer Region -->
+    <div id="scan-results-announcer" aria-live="polite" aria-atomic="true" class="visually-hidden"></div>
+
+    <!-- ==================== 0. LOGIN / SIGNUP VIEW ==================== -->
+    <section id="login-view" class="page-view">
+      <div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px;">
+        <div class="card card-glass" style="max-width: 440px; width: 100%; padding: 36px 30px; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);">
+          
+          <!-- Logo & Header -->
+          <div style="text-align: center; margin-bottom: 24px;">
+            <svg class="boot-logo-pulse" width="64" height="64" viewBox="0 0 100 100" style="margin: 0 auto 12px auto; display: block;">
+              <circle cx="50" cy="50" r="48" fill="#2E7D32"/>
+              <path d="M50 20 C30 40 30 70 50 80 C70 70 70 40 50 20 Z" fill="#66BB6A"/>
+              <path d="M50 20 L50 80" stroke="#1B5E20" stroke-width="4"/>
+            </svg>
+            <h2 style="font-size: 1.6rem; font-weight: 700; color: var(--text-primary);">PlantLens AI</h2>
+            <p class="subheading" style="margin-top: 4px; font-size: 0.9rem;">Sign in to unlock AI identification & cloud garden</p>
+          </div>
+
+          <!-- Tab Headers -->
+          <div style="display: flex; gap: 16px; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; margin-bottom: 22px;">
+            <button id="login-page-tab-signin" style="font-weight: 700; color: var(--primary-color); border-bottom: 3px solid var(--primary-color); padding-bottom: 4px; background: none; border: none; cursor: pointer; font-size: 1rem; font-family: inherit;">Sign In</button>
+            <button id="login-page-tab-signup" style="font-weight: 500; color: var(--text-secondary); padding-bottom: 4px; background: none; border: none; cursor: pointer; font-size: 1rem; font-family: inherit;">Create Account</button>
+          </div>
+
+          <!-- Google 1-Click Button -->
+          <button type="button" class="btn btn-secondary ripple" id="btn-login-page-google" style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; width: 100%; border-radius: var(--radius-md); font-weight: 600;">
+            <svg width="20" height="20" viewBox="0 0 48 48">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+            <span>Continue with Google</span>
+          </button>
+
+          <div style="display: flex; align-items: center; gap: 12px; margin: 18px 0;">
+            <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+            <span style="font-size: 0.75rem; color: var(--text-secondary); letter-spacing: 0.5px;">OR EMAIL</span>
+            <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+          </div>
+
+          <!-- Email/Password Form -->
+          <form id="login-page-form" style="display: flex; flex-direction: column; gap: 14px;">
+            <div id="login-page-name-group" style="display: none; flex-direction: column; gap: 6px;">
+              <label style="font-weight: 600; font-size: 0.85rem;">Display Name</label>
+              <input type="text" id="login-page-name-input" placeholder="Your Name" style="padding: 12px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--surface-card); color: var(--text-primary);">
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label style="font-weight: 600; font-size: 0.85rem;">Email Address</label>
+              <input type="email" id="login-page-email-input" required placeholder="name@example.com" style="padding: 12px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--surface-card); color: var(--text-primary);">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label style="font-weight: 600; font-size: 0.85rem;">Password</label>
+              <input type="password" id="login-page-password-input" required placeholder="••••••••" style="padding: 12px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--surface-card); color: var(--text-primary);">
+            </div>
+
+            <div id="login-page-error-msg" style="color: var(--danger-color); font-size: 0.85rem; font-weight: 500; display: none;"></div>
+
+            <button type="submit" class="btn btn-primary ripple" id="btn-login-page-submit" style="width: 100%; margin-top: 6px; padding: 12px; font-weight: 600;">Sign In</button>
+            
+            <div style="text-align: center; margin-top: 10px;">
+              <button type="button" class="btn-link" data-route="home" style="color: var(--text-secondary); font-size: 0.85rem; background: none; border: none; cursor: pointer; text-decoration: underline;">🌿 Explore App First</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 1. HOME VIEW ==================== -->
+    <section id="home-view" class="page-view active">
+      <div class="home-container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+          <div>
+            <div class="hero-badge">✨ Next-Gen Botanical Vision AI</div>
+            <h1 class="hero-title">
+              <span id="hero-typewriter-text">Discover Plant Health Instantly</span>
+              <span class="typewriter-cursor"></span>
+            </h1>
+            <p class="subheading hero-subtitle">
+              Identify plants, detect diseases, and receive AI-powered care recommendations in seconds.
+            </p>
+            <div class="hero-actions">
+              <button class="btn btn-primary ripple" data-route="scanner">📷 Start Scanning</button>
+              <button class="btn btn-secondary ripple" data-route="scanner">⚡ Try Demo</button>
+            </div>
+
+            <!-- Weather Hero Bar Widget -->
+            <div id="hero-weather-bar"></div>
+          </div>
+
+          <div class="hero-illustration">
+            <svg viewBox="0 0 400 360" class="float-anim">
+              <defs>
+                <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#66BB6A"/>
+                  <stop offset="100%" stop-color="#2E7D32"/>
+                </linearGradient>
+              </defs>
+              <circle cx="200" cy="180" r="140" fill="rgba(102,187,106,0.12)"/>
+              <path d="M200 40 C120 120 120 260 200 320 C280 260 280 120 200 40 Z" fill="url(#leafGrad)"/>
+              <path d="M200 40 L200 320" stroke="#1B5E20" stroke-width="6"/>
+              <path d="M200 120 L260 90" stroke="#1B5E20" stroke-width="4"/>
+              <path d="M200 180 L140 150" stroke="#1B5E20" stroke-width="4"/>
+              <path d="M200 240 L250 210" stroke="#1B5E20" stroke-width="4"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="section-header">
+          <h2>Powerful AI Features</h2>
+          <p class="subheading">Everything you need to keep your home garden and indoor flora thriving.</p>
+        </div>
+        <div class="features-grid">
+          <div class="card feature-card card-glass">
+            <div class="feature-icon-wrapper">🔍</div>
+            <h3>Plant Identification</h3>
+            <p class="body-text">Recognize over 10,000 species instantly from a single smartphone or webcam photo.</p>
+          </div>
+          <div class="card feature-card card-glass">
+            <div class="feature-icon-wrapper">🩺</div>
+            <h3>Disease Detection</h3>
+            <p class="body-text">Identify fungal, bacterial, and pest infestations with high precision severity scoring.</p>
+          </div>
+          <div class="card feature-card card-glass">
+            <div class="feature-icon-wrapper">🌿</div>
+            <h3>AI Care Guide</h3>
+            <p class="body-text">Receive customized organic remedies, watering schedules, fertilizer, and light advice.</p>
+          </div>
+          <div class="card feature-card card-glass">
+            <div class="feature-icon-wrapper">🪴</div>
+            <h3>Personal Garden</h3>
+            <p class="body-text">Track plant growth, care timeline logs, watering alerts, and historical health records.</p>
+          </div>
+        </div>
+
+        <!-- How It Works Section -->
+        <div class="section-header">
+          <h2>How It Works</h2>
+          <p class="subheading">Four simple steps to diagnose and nurture your garden.</p>
+        </div>
+        <div class="steps-grid">
+          <div class="card step-card">
+            <div class="step-number">1</div>
+            <h4>Upload Image</h4>
+            <p class="body-text">Snap a live photo or upload an image file from your device.</p>
+          </div>
+          <div class="card step-card">
+            <div class="step-number">2</div>
+            <h4>AI Analysis</h4>
+            <p class="body-text">Our neural network inspects leaf texture, spots, and foliage structure.</p>
+          </div>
+          <div class="card step-card">
+            <div class="step-number">3</div>
+            <h4>Get Results</h4>
+            <p class="body-text">View health score, diagnosis, organic remedies, and care metrics.</p>
+          </div>
+          <div class="card step-card">
+            <div class="step-number">4</div>
+            <h4>Save Plant</h4>
+            <p class="body-text">Add to your garden dashboard to track watering and health timeline.</p>
+          </div>
+        </div>
+
+        <!-- Plant Care Tips Section -->
+        <div class="tips-container">
+          <h2 style="margin-bottom: 8px;">Rotating Plant Care Tips</h2>
+          <p class="subheading" style="margin-bottom: 24px;">Expert horticultural advice updated daily.</p>
+          <div id="care-tips-container"></div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="stats-section">
+          <div class="stats-grid">
+            <div>
+              <div class="stat-number" id="stat-plants">0</div>
+              <div class="subheading">Plants Identified</div>
+            </div>
+            <div>
+              <div class="stat-number" id="stat-diseases">0</div>
+              <div class="subheading">Diseases Detected</div>
+            </div>
+            <div>
+              <div class="stat-number" id="stat-users">0</div>
+              <div class="subheading">Active Gardeners</div>
+            </div>
+            <div>
+              <div class="stat-number" id="stat-accuracy">0%</div>
+              <div class="subheading">Model Accuracy</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonials Section -->
+        <div class="section-header">
+          <h2>User Testimonials</h2>
+          <p class="subheading">Loved by botanists, landscapers, and home gardeners worldwide.</p>
+        </div>
+        <div id="testimonials-grid" class="testimonials-grid"></div>
+
+        <!-- FAQ Section -->
+        <div class="section-header">
+          <h2>Frequently Asked Questions</h2>
+          <p class="subheading">Have questions? We have answers.</p>
+        </div>
+        <div id="faq-accordion" class="faq-accordion"></div>
+
+        <!-- Footer -->
+        <footer class="footer">
+          <div class="footer-container">
+            <div>
+              <div class="brand-logo" style="margin-bottom: 12px;">
+                <svg viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="48" fill="#2E7D32"/>
+                  <path d="M50 20 C30 40 30 70 50 80 C70 70 70 40 50 20 Z" fill="#66BB6A"/>
+                  <path d="M50 20 L50 80" stroke="#1B5E20" stroke-width="4"/>
+                </svg>
+                <span>PlantLens AI</span>
+              </div>
+              <p class="body-text">Empowering plant enthusiasts with instant AI botanical diagnostics and smart garden care technology.</p>
+            </div>
+            <div>
+              <h4>Quick Links</h4>
+              <ul style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                <li><a href="#home" data-route="home">Home</a></li>
+                <li><a href="#scanner" data-route="scanner">AI Scanner</a></li>
+                <li><a href="#garden" data-route="garden">My Garden</a></li>
+                <li><a href="#settings" data-route="settings">Settings</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4>Support</h4>
+              <ul style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                <li><a href="#settings" data-route="settings">Help Center</a></li>
+                <li><a href="#settings" data-route="settings">Privacy Policy</a></li>
+                <li><a href="#settings" data-route="settings">Terms of Service</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4>Connect</h4>
+              <p class="body-text" style="margin-top: 12px;">Follow our botanical research and AI updates on social media.</p>
+              <div style="display: flex; gap: 12px; margin-top: 12px; font-size: 1.25rem;">
+                <span>🌐</span><span>🐦</span><span>📸</span><span>💬</span>
+              </div>
+            </div>
+          </div>
+          <div class="footer-bottom">
+            <div>© 2026 PlantLens AI. All rights reserved.</div>
+            <div>Developed for Final Year Project & Portfolio Showcase</div>
+          </div>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ==================== 2. SCANNER VIEW ==================== -->
+    <section id="scanner-view" class="page-view">
+      <div class="scanner-container">
+        <div class="scanner-header">
+          <h2>AI Plant Scanner & Disease Diagnostic</h2>
+          <p class="subheading">Upload an image or use your live camera for real-time neural network analysis.</p>
+        </div>
+
+        <!-- Upload Dropzone Card -->
+        <div class="dropzone-card card-glass" id="dropzone" tabindex="0" role="button" aria-label="Upload plant image. Drag and drop plant image or press Enter to browse files">
+          <div class="laser-scan-overlay" id="laser-overlay" aria-hidden="true">
+            <div class="laser-line"></div>
+          </div>
+          <div class="dropzone-icon" aria-hidden="true">📷</div>
+          <h3>Drag & Drop Plant Image Here</h3>
+          <p class="text-muted" style="margin-top: 4px;">Supported formats: PNG, JPG, JPEG, WEBP (Max 10MB)</p>
+          <input type="file" id="file-input" accept="image/png, image/jpeg, image/jpg, image/webp" style="display: none;" aria-label="Choose plant image file">
+
+          <div class="scanner-actions">
+            <button class="btn btn-primary ripple" id="btn-upload-file">📁 Upload Image</button>
+            <button class="btn btn-secondary ripple" id="btn-open-camera">📷 Open Live Camera</button>
+          </div>
+        </div>
+
+        <!-- Sample Plants Bar -->
+        <div class="samples-bar" id="samples-bar">
+          <div class="text-muted" style="font-weight: 500;">Or try quick sample plant images:</div>
+          <div class="samples-grid" id="sample-chips-container"></div>
+        </div>
+
+        <!-- Multi-Stage AI Pipeline Progress Indicator (Hidden by default) -->
+        <div id="scan-pipeline-card" class="scan-pipeline-card" style="display: none;">
+          <h3 style="color: var(--primary-color);">AI Diagnostic Pipeline Running</h3>
+          <p class="text-muted">Analyzing foliage micro-textures and disease patterns...</p>
+          <div class="pipeline-steps" id="pipeline-steps"></div>
+        </div>
+
+        <!-- Diagnostic Report Results Card (Hidden by default) -->
+        <div id="report-card" class="report-card" style="display: none;"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 3. GARDEN VIEW ==================== -->
+    <section id="garden-view" class="page-view">
+      <div class="garden-container">
+        <div class="section-header" style="margin-bottom: 28px; text-align: left;">
+          <h2>My Personal Garden</h2>
+          <p class="subheading">Manage saved plants, monitor health scores, and track care schedules.</p>
+        </div>
+
+        <!-- Analytics Ribbon Header -->
+        <div id="garden-analytics-ribbon" class="analytics-ribbon"></div>
+
+        <!-- Weather Widget in Garden -->
+        <div id="garden-weather-container" style="margin-bottom: 32px;"></div>
+
+        <!-- Search & Filter Toolbar -->
+        <div class="garden-toolbar">
+          <div class="search-box">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="garden-search" placeholder="Search plant name, scientific name, or disease...">
+          </div>
+
+          <div class="filter-pills" id="garden-filter-pills">
+            <button class="filter-pill active" data-filter="All">All</button>
+            <button class="filter-pill" data-filter="Healthy">Healthy</button>
+            <button class="filter-pill" data-filter="Diseased">Diseased</button>
+            <button class="filter-pill" data-filter="Indoor">Indoor</button>
+            <button class="filter-pill" data-filter="Outdoor">Outdoor</button>
+            <button class="filter-pill" data-filter="Flowers">Flowers</button>
+            <button class="filter-pill" data-filter="Vegetables">Vegetables</button>
+            <button class="filter-pill" data-filter="Herbs">Herbs</button>
+          </div>
+        </div>
+
+        <!-- Plant Cards Grid -->
+        <div id="garden-grid" class="garden-grid"></div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. SETTINGS VIEW ==================== -->
+    <section id="settings-view" class="page-view">
+      <div class="settings-container">
+        <div class="settings-header">
+          <h2>Application Settings & Preferences</h2>
+          <p class="subheading">Customize themes, notification alerts, language, accessibility, and garden backups.</p>
+        </div>
+
+        <div class="settings-sections">
+          <!-- Profile Card -->
+          <div class="settings-card" id="settings-profile-card">
+            <div class="settings-card-title">👤 User Profile</div>
+            
+            <!-- Logged-in State (Shown when authenticated) -->
+            <div id="profile-logged-in-view" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+              <div style="display: flex; gap: 16px; align-items: center;">
+                <div class="profile-large-avatar" id="profile-user-avatar">P</div>
+                <div>
+                  <h3 id="profile-user-name" style="font-size: 1.25rem;">Botanist Member</h3>
+                  <p id="profile-user-email" class="subheading">user@example.com</p>
+                  <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; align-items: center;">
+                    <span class="badge badge-success" id="profile-user-plan">Botanist Member</span>
+                    <span class="badge badge-healthy" id="profile-user-scans">📊 Total Scans: 0</span>
+                    <span class="badge" id="profile-user-uid" style="background: rgba(255,255,255,0.06); font-family: monospace; font-size: 0.72rem; cursor: pointer;" title="Click to copy Firebase UID">UID</span>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-secondary ripple" id="btn-profile-card-logout" style="border-color: var(--danger-color); color: var(--danger-color); padding: 8px 18px;">🚪 Sign Out</button>
+            </div>
+
+            <!-- Logged-out State (Default) -->
+            <div id="profile-logged-out-view" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+              <div>
+                <h3 style="font-size: 1.15rem; margin-bottom: 4px;">Sign In to PlantLens AI</h3>
+                <p class="subheading">Access cloud garden sync, save diagnostic records, and manage your account.</p>
+              </div>
+              <button class="btn btn-primary ripple" id="btn-settings-login" style="padding: 10px 22px;">🔑 Sign In / Register</button>
+            </div>
+          </div>
+
+          <!-- Appearance -->
+          <div class="settings-card">
+            <div class="settings-card-title">🎨 Appearance & Theme</div>
+            <div class="setting-item">
+              <div>
+                <div style="font-weight: 600;">Color Theme</div>
+                <div class="text-muted">Choose between Light, Dark, or System Sync</div>
+              </div>
+              <select id="theme-select" class="settings-select">
+                <option value="light">☀️ Light Mode</option>
+                <option value="dark">🌙 Dark Mode</option>
+                <option value="system">🖥️ System Preference</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Accessibility -->
+          <div class="settings-card">
+            <div class="settings-card-title">♿ Accessibility Suite</div>
+            <div class="setting-item">
+              <div>
+                <div style="font-weight: 600;">High Contrast Mode</div>
+                <div class="text-muted">Increase border contrast and text legibility</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-high-contrast">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- AI Vision Engine Status -->
+          <div class="settings-card">
+            <div class="settings-card-title">🤖 AI Vision Diagnostic Engine</div>
+            <div class="setting-item">
+              <div>
+                <div style="font-weight: 600;">Neural Vision Pipeline</div>
+                <div class="text-muted" style="font-size: 0.82rem;">Google Gemini Multimodal Vision AI Cloud Proxy</div>
+              </div>
+              <span class="badge badge-healthy" style="padding: 4px 12px; font-size: 0.8rem; font-weight: 600;">● Online (Active)</span>
+            </div>
+            <div class="setting-item" style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 8px;">
+              <div>
+                <div style="font-weight: 600;">Botanical Species Database</div>
+                <div class="text-muted" style="font-size: 0.82rem;">Over 10,000+ flora taxa & disease diagnostic profiles</div>
+              </div>
+              <span class="badge badge-healthy" style="padding: 4px 12px; font-size: 0.8rem; font-weight: 600;">● Connected</span>
+            </div>
+          </div>
+
+          <!-- Notifications -->
+          <div class="settings-card">
+            <div class="settings-card-title">🔔 Notification Preferences</div>
+            <div class="setting-item">
+              <div>
+                <div style="font-weight: 600;">Watering Reminders</div>
+                <div class="text-muted">Receive daily plant hydration prompts</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-waterReminder" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div>
+                <div style="font-weight: 600;">Disease Warning Alerts</div>
+                <div class="text-muted">High severity warnings for garden infections</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-diseaseAlerts" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div>
+                <div style="font-weight: 600;">Weekly Plant Care Tips</div>
+                <div class="text-muted">Horticultural insights tailored for your plants</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggle-weeklyTips" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Language -->
+          <div class="settings-card">
+            <div class="settings-card-title">🌐 Language & Localization</div>
+            <div class="setting-item">
+              <div>
+                <div style="font-weight: 600;">Display Language</div>
+                <div class="text-muted">Select application interface language</div>
+              </div>
+              <select id="lang-select" class="settings-select">
+                <option value="en">English (US)</option>
+                <option value="ta">Tamil (தமிழ்)</option>
+                <option value="te">Telugu (తెలుగు)</option>
+                <option value="hi">Hindi (हिंदी)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Data Backup & Import/Export -->
+          <div class="settings-card">
+            <div class="settings-card-title">💾 Storage & Data Management</div>
+            <div class="setting-item">
+              <div>
+                <div style="font-weight: 600;">Export Garden Data</div>
+                <div class="text-muted">Download JSON backup of your saved plants</div>
+              </div>
+              <button class="btn btn-secondary ripple" id="btn-export-data">📥 Export JSON</button>
+            </div>
+            <div class="setting-item">
+              <div>
+                <div style="font-weight: 600;">Import Garden Data</div>
+                <div class="text-muted">Restore garden records from backup file</div>
+              </div>
+              <input type="file" id="import-file-input" accept=".json" style="display: none;">
+              <button class="btn btn-secondary ripple" id="btn-import-data">📤 Import JSON</button>
+            </div>
+          </div>
+
+          <!-- Support & About -->
+          <div class="settings-card">
+            <div class="settings-card-title">ℹ️ Information & Support</div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px;">
+              <button class="btn btn-secondary ripple" id="btn-change-password">🔐 Change Password</button>
+              <button class="btn btn-secondary ripple" id="btn-help-center">❓ Help Center & FAQ</button>
+              <button class="btn btn-secondary ripple" id="btn-privacy-terms">📜 Privacy & Terms</button>
+              <button class="btn btn-secondary ripple" id="btn-about-app">🌿 About App</button>
+              <button class="btn btn-danger ripple" id="btn-logout" style="margin-left: auto;">🚪 Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== SHARED MODAL OVERLAYS ==================== -->
+ 
+  <!-- WebRTC Live Camera Modal -->
+  <div id="camera-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="camera-modal-title">
+    <div class="modal-card" style="max-width: 600px; text-align: center;">
+      <h3 id="camera-modal-title">📷 Live Camera Scan</h3>
+      <p class="text-muted" style="margin-bottom: 16px;">Position plant leaf inside camera frame</p>
+      <div style="position: relative; border-radius: var(--radius-md); overflow: hidden; background: #000; height: 320px;">
+        <video id="webcam-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 16px; margin-top: 20px;">
+        <button class="btn btn-primary ripple" id="btn-snap-photo">📸 Capture Photo</button>
+        <button class="btn btn-secondary ripple" id="btn-close-camera">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plant Details Modal (Garden Page) -->
+  <div id="plant-detail-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Plant Details Modal">
+    <div class="modal-card" id="plant-detail-content"></div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="password-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="password-modal-title">
+    <div class="modal-card">
+      <h3 id="password-modal-title">🔐 Change Password</h3>
+      <div style="margin: 16px 0; display: flex; flex-direction: column; gap: 12px;">
+        <input type="password" placeholder="Current Password" aria-label="Current Password" style="padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+        <input type="password" placeholder="New Password" aria-label="New Password" style="padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+        <input type="password" placeholder="Confirm New Password" aria-label="Confirm New Password" style="padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <button class="btn btn-secondary btn-close-modal">Cancel</button>
+        <button class="btn btn-primary btn-close-modal">Update Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Center Modal -->
+  <div id="help-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+    <div class="modal-card">
+      <h3 id="help-modal-title">❓ Help Center & Support</h3>
+      <p class="subheading" style="margin-top: 8px;">How can we assist you with PlantLens AI?</p>
+      <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 10px;">
+        <div><strong>Email Support:</strong> support@plantlens.ai</div>
+        <div><strong>Community Forum:</strong> community.plantlens.ai</div>
+        <div><strong>Hours:</strong> Mon - Fri, 9:00 AM - 6:00 PM EST</div>
+      </div>
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-primary btn-close-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy Policy Modal -->
+  <div id="privacy-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="privacy-modal-title">
+    <div class="modal-card">
+      <h3 id="privacy-modal-title">📜 Privacy Policy & Terms</h3>
+      <div style="margin: 16px 0; max-height: 250px; overflow-y: auto; color: var(--text-secondary); font-size: 0.9rem;">
+        <p>PlantLens AI respects your privacy. All uploaded plant images are processed solely for identification and diagnostic purposes. We do not store personal biometric data or share images with unapproved third parties without consent.</p>
+      </div>
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-primary btn-close-modal">I Understand</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About App Modal -->
+  <div id="about-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-modal-title">
+    <div class="modal-card" style="text-align: center;">
+      <div class="brand-logo" style="justify-content: center; margin-bottom: 12px;">
+        <svg viewBox="0 0 100 100" width="48" height="48" aria-hidden="true">
+          <circle cx="50" cy="50" r="48" fill="#2E7D32"/>
+          <path d="M50 20 C30 40 30 70 50 80 C70 70 70 40 50 20 Z" fill="#66BB6A"/>
+          <path d="M50 20 L50 80" stroke="#1B5E20" stroke-width="4"/>
+        </svg>
+      </div>
+      <h3 id="about-modal-title">PlantLens AI v2.4.0</h3>
+      <p class="subheading">Next-Gen Plant Identification & AI Disease Detection</p>
+      <p style="margin: 16px 0; color: var(--text-secondary); font-size: 0.9rem;">
+        Engineered with Material Design 3, deep learning diagnostic pipeline simulation, and offline PWA capabilities for final year portfolio demonstration.
+      </p>
+      <div style="display: flex; justify-content: center;">
+        <button class="btn btn-primary btn-close-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Authentication Modal -->
+  <div id="auth-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div class="modal-card" style="max-width: 420px;">
+      <div id="auth-modal-title" class="visually-hidden">Sign In or Create Account</div>
+      <!-- Tab Headers -->
+      <div style="display: flex; gap: 16px; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px;" role="tablist">
+        <button type="button" role="tab" id="auth-tab-login" aria-selected="true" class="subheading" style="font-weight: 700; color: var(--primary-color); border-bottom: 3px solid var(--primary-color); padding-bottom: 4px;">Sign In</button>
+        <button type="button" role="tab" id="auth-tab-signup" aria-selected="false" class="subheading" style="font-weight: 500; color: var(--text-secondary); padding-bottom: 4px;">Create Account</button>
+      </div>
+
+      <!-- Auth Form -->
+      <form id="auth-form" style="display: flex; flex-direction: column; gap: 14px;">
+        <div id="auth-name-group" style="display: none; flex-direction: column; gap: 6px;">
+          <label for="auth-name-input" style="font-weight: 600; font-size: 0.85rem;">Display Name</label>
+          <input type="text" id="auth-name-input" placeholder="Your Name" style="padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--surface-card); color: var(--text-primary);">
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label for="auth-email-input" style="font-weight: 600; font-size: 0.85rem;">Email Address</label>
+          <input type="email" id="auth-email-input" required placeholder="name@example.com" style="padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--surface-card); color: var(--text-primary);">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label for="auth-password-input" style="font-weight: 600; font-size: 0.85rem;">Password</label>
+          <input type="password" id="auth-password-input" required placeholder="••••••••" style="padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--surface-card); color: var(--text-primary);">
+        </div>
+
+        <div id="auth-error-msg" role="alert" style="color: var(--danger-color); font-size: 0.85rem; font-weight: 500; display: none;"></div>
+
+        <button type="submit" class="btn btn-primary ripple" id="btn-auth-submit" style="width: 100%; margin-top: 10px; padding: 12px;">Sign In</button>
+
+        <div style="display: flex; align-items: center; gap: 10px; margin: 4px 0;">
+          <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">OR</span>
+          <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+        </div>
+
+        <button type="button" class="btn btn-secondary ripple" id="btn-google-auth" style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px; width: 100%;">
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <button type="button" class="btn btn-secondary ripple btn-close-modal" style="width: 100%; padding: 10px;">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Live Container -->
+  <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+
+  <!-- Main JavaScript App Entry -->
+  <script type="module" src="/src/js/app.js"></script>
+</body>
+</html>

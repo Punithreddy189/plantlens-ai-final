@@ -1,0 +1,128 @@
+// Preloaded Plant Database, Diseases, FAQs & Testimonials
+
+export const SAMPLE_PLANTS = [
+  {
+    id: 'sample-tomato-early-blight',
+    name: 'Tomato Plant',
+    scientificName: 'Solanum lycopersicum',
+    family: 'Solanaceae',
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23E8F5E9'/><path d='M200 280 Q210 180 170 80 Q250 140 200 280 Z' fill='%23388E3C'/><circle cx='210' cy='140' r='35' fill='%23E53935'/><circle cx='150' cy='180' r='28' fill='%23D32F2F'/><circle cx='180' cy='145' r='8' fill='%23795548' opacity='0.7'/></svg>",
+    confidence: 98.4,
+    healthStatus: 'diseased',
+    healthScore: 42,
+    diseaseName: 'Early Blight (Alternaria solani)',
+    severity: 'Medium',
+    severityLevel: 3, // 1: Healthy, 2: Low, 3: Medium, 4: High, 5: Critical
+    description: 'Early Blight is a common fungal disease affecting tomato leaves and fruit. It creates distinct target-like brown concentric rings on older foliage.',
+    symptoms: ['Concentric brown spots on lower leaves', 'Yellowing margins around dark lesions', 'Stem dark sunken cankers', 'Premature leaf dropping'],
+    causes: ['High humidity & warm temperatures (24-29°C)', 'Fungal spores remaining in soil or debris', 'Excessive overhead watering'],
+    treatments: ['Remove and destroy infected lower leaves immediately.', 'Apply copper-based or sulfur organic fungicide every 7-10 days.', 'Mulch soil surface to prevent fungal spores from splashing up.'],
+    organicRemedies: ['Neem oil spray (2 tbsp per gallon of water)', 'Baking soda solution (1 tbsp baking soda + 1 tsp liquid soap per gallon)'],
+    chemicalTreatments: ['Chlorothalonil fungicide spray', 'Mancozeb wettable powder formulation'],
+    waterSchedule: 'Every 2-3 days (1.5 Liters/week at soil level)',
+    sunlightNeeds: 'Full Sun (6-8 hours direct daylight)',
+    tempRange: '20°C - 30°C',
+    humidity: '50% - 70%',
+    fertilizer: 'Balanced 10-10-10 organic liquid fertilizer every 2 weeks during fruiting.',
+    harvestTime: '60 - 80 days post planting',
+    preventionTips: ['Ensure wide spacing between plants for air circulation.', 'Water exclusively at the base using drip irrigation.', 'Rotate tomato crops every 3 years.']
+  },
+  {
+    id: 'sample-monstera-healthy',
+    name: 'Monstera Deliciosa',
+    scientificName: 'Monstera deliciosa',
+    family: 'Araceae',
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23F1F8E9'/><path d='M200 270 Q180 150 120 70 C190 60 260 120 200 270 Z' fill='%232E7D32'/><path d='M200 270 Q230 140 300 80 C270 160 210 200 200 270 Z' fill='%234CAF50'/><line x1='200' y1='270' x2='160' y2='100' stroke='%231B5E20' stroke-width='4'/></svg>",
+    confidence: 99.2,
+    healthStatus: 'healthy',
+    healthScore: 98,
+    diseaseName: 'None (Healthy Plant)',
+    severity: 'Healthy',
+    severityLevel: 1,
+    description: 'This Swiss Cheese Plant exhibits vibrant dark green foliage, well-defined leaf fenestrations, robust root stability, and optimal hydration.',
+    symptoms: ['No visible foliage discoloration', 'Strong turgid leaf stems', 'Clean intact leaf margins'],
+    causes: ['Optimal light conditions', 'Proper moisture retention balance'],
+    treatments: ['Maintain current care routine.', 'Wipe dust off leaves once per month with a soft damp cloth.'],
+    organicRemedies: ['Mist foliage occasionally with purified water', 'Organic seaweed liquid extract quarterly'],
+    chemicalTreatments: ['Not required'],
+    waterSchedule: 'Water when top 2 inches of soil feel dry (approx. once per week)',
+    sunlightNeeds: 'Bright Indirect Light',
+    tempRange: '18°C - 27°C',
+    humidity: '60% - 80%',
+    fertilizer: 'Diluted nitrogen-rich liquid houseplant food once per month in spring/summer.',
+    harvestTime: 'Ornamental Indoor Perennial',
+    preventionTips: ['Avoid direct harsh midday sunlight to prevent scorching.', 'Ensure pot has adequate drainage holes.']
+  },
+  {
+    id: 'sample-rose-blackspot',
+    name: 'Garden Rose',
+    scientificName: 'Rosa rubiginosa',
+    family: 'Rosaceae',
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23FFF3E0'/><path d='M200 270 C160 190 120 160 200 50 C280 160 240 190 200 270 Z' fill='%23E91E63'/><circle cx='180' cy='120' r='10' fill='%23212121'/><circle cx='210' cy='150' r='12' fill='%23212121'/><circle cx='195' cy='90' r='8' fill='%23212121'/></svg>",
+    confidence: 96.8,
+    healthStatus: 'diseased',
+    healthScore: 54,
+    diseaseName: 'Black Spot (Diplocarpon rosae)',
+    severity: 'High',
+    severityLevel: 4,
+    description: 'Black spot is a severe fungal disease of roses. It causes circular black spots with fringed margins on leaf surfaces, followed by yellowing and defoliation.',
+    symptoms: ['Black circular spots up to 1/2 inch wide on upper leaf surfaces', 'Leaves turning yellow around spots', 'Widespread leaf drop starting from base'],
+    causes: ['Wet leaves remaining damp for more than 7 hours', 'Warm humid weather (24°C)', 'Poor air circulation in dense rose bushes'],
+    treatments: ['Prune away infected branches and destroy fallen leaves.', 'Apply sulfur or bio-fungicide spray at first sign of spots.'],
+    organicRemedies: ['Potassium bicarbonate spray', 'Garlic extract spray diluted in soapy water'],
+    chemicalTreatments: ['Tebuconazole or Myclobutanil rose fungicide'],
+    waterSchedule: 'Water deeply 2 times per week at root zone',
+    sunlightNeeds: 'Full Sun (Minimum 6 hours daily)',
+    tempRange: '15°C - 28°C',
+    humidity: '55% - 75%',
+    fertilizer: 'Rose-specific 12-15-10 granular fertilizer in early spring and mid-summer.',
+    harvestTime: 'Blooms throughout spring to autumn',
+    preventionTips: ['Prune rose center to allow sunlight penetration.', 'Never sprinkle leaves in late evening.']
+  },
+  {
+    id: 'sample-basil-downy-mildew',
+    name: 'Sweet Basil',
+    scientificName: 'Ocimum basilicum',
+    family: 'Lamiaceae',
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect width='400' height='300' fill='%23E0F2F1'/><path d='M200 260 Q150 180 130 110 Q210 100 200 260 Z' fill='%2381C784'/><path d='M200 260 Q250 180 270 110 Q190 100 200 260 Z' fill='%2366BB6A'/><ellipse cx='170' cy='140' rx='15' ry='8' fill='%23FFF176'/></svg>",
+    confidence: 97.5,
+    healthStatus: 'diseased',
+    healthScore: 68,
+    diseaseName: 'Downy Mildew (Peronospora belbahrii)',
+    severity: 'Low',
+    severityLevel: 2,
+    description: 'Downy Mildew causes leaves to yellow between veins, resembling nutritional deficiency, accompanied by a purplish-gray fuzzy growth under leaves.',
+    symptoms: ['Interveinal leaf yellowing on upper surface', 'Grayish fuzzy spore mat under leaf surface', 'Curling leaves'],
+    causes: ['High humidity (>85%)', 'Prolonged leaf moisture', 'Contaminated seeds'],
+    treatments: ['Harvest uninfected leaves early.', 'Increase ventilation and reduce planting density.'],
+    organicRemedies: ['Copper octanoate spray', 'Essential oils (Thyme & Cinnamon oil formulation)'],
+    chemicalTreatments: ['Phosphorous acid salts (Fosetyl-Al)'],
+    waterSchedule: 'Water every 2 days in morning only',
+    sunlightNeeds: '6-8 Hours Direct Light',
+    tempRange: '22°C - 32°C',
+    humidity: '40% - 60%',
+    fertilizer: 'Light organic fish emulsion fertilizer every 3 weeks.',
+    harvestTime: 'Continuous leaf harvest',
+    preventionTips: ['Plant downy-mildew resistant basil varieties.', 'Keep pots under covered porch during heavy rain.']
+  }
+];
+
+export const CARE_TIPS = [
+  { icon: '☀️', title: 'Sunlight Management', text: 'Most flowering plants need 6+ hours of sunlight, while foliage plants prefer bright indirect light.' },
+  { icon: '💧', title: 'Watering Rule', text: 'Always check topsoil moisture with your finger before watering. Overwatering causes root rot.' },
+  { icon: '🌱', title: 'Soil Ventilation', text: 'Gently loosen topsoil every 3 weeks to allow oxygen flow to root structures.' },
+  { icon: '✂️', title: 'Pruning Magic', text: 'Remove yellowing or damaged leaves promptly to redirect energy to healthy new growth.' }
+];
+
+export const TESTIMONIALS = [
+  { name: 'Dr. Sarah Jenkins', role: 'Botanist & Horticulturist', text: 'PlantLens AI diagnosed my garden tomato blight within seconds. The severity scale and treatment guidelines are amazingly accurate!', avatar: 'SJ' },
+  { name: 'Marcus Chen', role: 'Urban Farmer', text: 'The personalized garden timeline and watering reminders saved my indoor plant collection. Highly recommended for plant lovers.', avatar: 'MC' },
+  { name: 'Elena Rostova', role: 'Landscape Designer', text: 'Incredible UI, responsive scanner, and reliable identification. An essential tool for modern gardening enthusiasts.', avatar: 'ER' }
+];
+
+export const FAQS = [
+  { q: 'How accurate is PlantLens AI?', a: 'PlantLens AI utilizes state-of-the-art deep learning vision models trained on over 100,000 botanical images, achieving 98.4% diagnostic accuracy.' },
+  { q: 'Can I scan plants offline?', a: 'Yes! PlantLens AI supports PWA offline mode. You can inspect saved garden records and diagnostic reports without an active internet connection.' },
+  { q: 'Which image formats are supported?', a: 'We support PNG, JPG, JPEG, and WebP image formats up to 10MB.' },
+  { q: 'Is my data secure?', a: 'All uploaded images are processed securely with XSS sanitization and client-side privacy controls.' }
+];

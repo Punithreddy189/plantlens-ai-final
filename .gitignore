@@ -1,0 +1,56 @@
+# Android build & IDE artifacts
+*.iml
+.gradle/
+**/local.properties
+.idea/
+**/.idea/
+.kotlin/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.hprof
+*.log
+backend_stderr.txt
+backend_stdout.txt
+
+# Node / Web artifacts
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.npm/
+.eslintcache
+.yarn-integrity
+
+# Environment & secrets
+.env
+**/.env
+!.env.example
+**/.env.example
+*.local
+
+# Firebase artifacts
+.firebase/
+**/.firebase/
+firebase-debug.log*
+**/firebase-debug.log*
+.dataconnect/
+
+# Python / Pytest / Test reports
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+**/.pytest_cache/
+venv/
+.venv/
+env/
+**/tests/reports/
+**/tests/screenshots/
+
+# OS and Context artifacts
+.DS_Store
+Thumbs.db
+codebase_context.txt
+**/codebase_context.txt

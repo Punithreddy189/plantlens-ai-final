@@ -1,0 +1,69 @@
+/* Responsive Breakpoints & Mobile Navigation Drawer */
+.mobile-menu-btn {
+  display: none;
+}
+
+@media (max-width: 992px) {
+  .nav-links {
+    display: none;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .nav-links.mobile-open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    background: var(--surface-card);
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px 24px;
+    gap: 12px;
+    box-shadow: var(--shadow-lg);
+    animation: slideDownMenu 0.3s ease;
+  }
+
+  .nav-links.mobile-open .nav-link {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+  }
+}
+
+@keyframes slideDownMenu {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tablet & Mobile tweaks */
+@media (max-width: 768px) {
+  :root {
+    --nav-height: 64px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  .modal-card {
+    padding: 20px;
+    max-width: 95%;
+  }
+
+  .toast-container {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .scroll-top-btn {
+    bottom: 20px;
+    left: 20px;
+    width: 42px;
+    height: 42px;
+  }
+}

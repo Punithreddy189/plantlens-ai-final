@@ -1,0 +1,88 @@
+:root {
+  /* Brand Color Palette */
+  --primary-color: #2E7D32;      /* Emerald Green */
+  --primary-hover: #236327;
+  --secondary-color: #66BB6A;    /* Light Green */
+  --accent-color: #43A047;       /* Leaf Green */
+  --bg-color: #F5FFF5;           /* Soft Green Background */
+  --surface-card: #FFFFFF;       /* White Cards */
+  --surface-card-hover: #FAFFFA;
+  --text-primary: #1B5E20;       /* Dark Green */
+  --text-secondary: #556B55;     /* Soft Charcoal / Greenish Gray */
+  --text-muted: #889988;
+  --border-color: #E0E0E0;
+  --border-light: #EEF5EE;
+
+  /* Status Indicators */
+  --success-color: #4CAF50;
+  --warning-color: #FFC107;
+  --danger-color: #F44336;
+  --info-color: #2196F3;
+  --critical-color: #D32F2F;
+
+  /* Elevation & Shadows */
+  --shadow-sm: 0 2px 8px rgba(27, 94, 32, 0.06);
+  --shadow-md: 0 4px 20px rgba(27, 94, 32, 0.08);
+  --shadow-lg: 0 12px 32px rgba(27, 94, 32, 0.12);
+  --shadow-glow: 0 0 24px rgba(102, 187, 106, 0.35);
+
+  /* Radius System */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;           /* Required 16px rounded corners */
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-blur: blur(14px);
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout */
+  --nav-height: 72px;
+  --container-max-width: 1280px;
+}
+
+/* Dark Mode Theme Overrides */
+[data-theme="dark"] {
+  --primary-color: #4CAF50;
+  --primary-hover: #388E3C;
+  --secondary-color: #81C784;
+  --accent-color: #66BB6A;
+  --bg-color: #0A140B;
+  --surface-card: #142416;
+  --surface-card-hover: #1B301E;
+  --text-primary: #E8F5E9;
+  --text-secondary: #A5D6A7;
+  --text-muted: #729B74;
+  --border-color: #254028;
+  --border-light: #1C331E;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 24px rgba(76, 175, 80, 0.25);
+
+  --glass-bg: rgba(20, 36, 22, 0.8);
+  --glass-border: rgba(37, 64, 40, 0.6);
+}
+
+/* High Contrast Theme Overrides */
+[data-high-contrast="true"] {
+  --border-color: #000000;
+  --text-secondary: #000000;
+  --surface-card: #FFFFFF;
+  --bg-color: #FFFFFF;
+}
+[data-theme="dark"][data-high-contrast="true"] {
+  --border-color: #FFFFFF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #FFFFFF;
+  --surface-card: #000000;
+  --bg-color: #000000;
+}

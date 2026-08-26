@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "7465551549",
+    "project_id": "plantlens-ai",
+    "storage_bucket": "plantlens-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:7465551549:android:6cff5eb8c06fe912b519d4",
+        "android_client_info": {
+          "package_name": "com.plantlens.ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQbohgyJTB9Rb35e3_IKEyACsYHRCsS78"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

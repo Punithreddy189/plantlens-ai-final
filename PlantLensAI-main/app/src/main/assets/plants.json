@@ -1,0 +1,243 @@
+[
+  {
+    "id": "monstera_deliciosa",
+    "name": "Monstera",
+    "scientificName": "Monstera deliciosa",
+    "category": "Indoor",
+    "wateringFrequency": 7,
+    "wateringInstructions": "Water thoroughly once every 7 days. Allow top 2 inches of soil to dry out between waterings.",
+    "advantages": [
+      "Excellent air purifier by absorbing volatile chemical elements",
+      "Highly aesthetic addition to any indoor setup with signature leaf holes",
+      "Easy to propagate from stem cuttings"
+    ],
+    "disadvantages": [
+      "Mildly toxic to cats and dogs if ingested",
+      "Requires significant floor space as it matures"
+    ],
+    "careTips": [
+      "Place in bright to medium indirect sunlight.",
+      "Maintain room humidity above 50% for optimal leaf splits.",
+      "Wipe the large leaves with a damp cloth occasionally to clear dust."
+    ],
+    "imageUrl": "monstera",
+    "family": "Araceae",
+    "genus": "Monstera",
+    "uses": [
+      "Excellent air purifier by absorbing volatile chemical elements",
+      "Highly aesthetic addition to any indoor setup with signature leaf holes"
+    ],
+    "localNames": {
+      "en": "Monstera",
+      "te": "మోన్‌స్టెరా",
+      "ta": "மான்ஸ்டெரா",
+      "hi": "मॉन्स्टेरा",
+      "kn": "ಮಾನ್‌ಸ್ಟೆರಾ",
+      "ml": "മോൺസ്റ്റെറ",
+      "bn": "মনস্টেরা",
+      "mr": "मॉन्स्टेरा",
+      "gu": "મોન્સ્ટેરા",
+      "pa": "ਮੌਨਸटੇਰਾ"
+    }
+  },
+  {
+    "id": "aloe_vera",
+    "name": "Aloe Vera",
+    "scientificName": "Aloe vera",
+    "category": "Succulent",
+    "wateringFrequency": 14,
+    "wateringInstructions": "Water deeply every 14 days, ensuring complete soil dryness between cycles.",
+    "advantages": [
+      "Soothes sunburns, minor cuts, and skin irritations with natural gel",
+      "Highly drought-tolerant, extremely hard to kill",
+      "Produces offsets or 'pups' easily for sharing"
+    ],
+    "disadvantages": [
+      "Prone to root rot if overwatered or kept in stagnant clay soil",
+      "Sharp, spiky leaf margins require careful placement away from narrow corridors"
+    ],
+    "careTips": [
+      "Requires plenty of bright direct sunlight (minimum 6 hours daily).",
+      "Always use a well-draining cactus or succulent soil mix.",
+      "Grow in terracotta pots which allow moisture to wick away quickly."
+    ],
+    "imageUrl": "aloe_vera",
+    "family": "Asphodelaceae",
+    "genus": "Aloe",
+    "uses": [
+      "Soothes sunburns, minor cuts, and skin irritations with natural gel"
+    ],
+    "localNames": {
+      "en": "Aloe Vera",
+      "te": "కలబంద",
+      "ta": "கற்றாழை",
+      "hi": "घृतकुमारी",
+      "kn": "ಲೋಳೆಸರ",
+      "ml": "കറ്റാർവാഴ",
+      "bn": "ঘৃতকুমারী",
+      "mr": "कोरफड",
+      "gu": "એলোવેరా",
+      "pa": "ਐਲोवेरा"
+    }
+  },
+  {
+    "id": "snake_plant",
+    "name": "Snake Plant",
+    "scientificName": "Sansevieria trifasciata",
+    "category": "Indoor",
+    "wateringFrequency": 21,
+    "wateringInstructions": "Water sparingly every 21 days. Highly sensitive to wet soil, err on the side of dryness.",
+    "advantages": [
+      "Extremely hardy and thrives under high neglect",
+      "Produces oxygen at night, making it ideal for bedroom placement",
+      "Tolerates low light environments exceptionally well"
+    ],
+    "disadvantages": [
+      "Toxic to pets if chewed or swallowed",
+      "Slow growth rate compared to other tropicals"
+    ],
+    "careTips": [
+      "Keep in moderate to indirect low light conditions.",
+      "Do not water the center rosette directly; water around the soil base.",
+      "Repot only when the strong roots begin cracking the container."
+    ],
+    "imageUrl": "snake_plant",
+    "family": "Asparagaceae",
+    "genus": "Sansevieria",
+    "uses": [
+      "Produces oxygen at night, making it ideal for bedroom placement"
+    ],
+    "localNames": {
+      "en": "Snake Plant",
+      "te": "పాము మొక్క",
+      "ta": "பாம்பு செடி",
+      "hi": "स्नेक प्लांट",
+      "kn": "ಹಾವಿನ ಗಿಡ",
+      "ml": "സ്നേക്ക് പ്ലാന്റ്",
+      "bn": "স্নেক প্ল্যান্ট",
+      "mr": "स्नेक प्लांट",
+      "gu": "સ્નેક પ્લાન્ટ",
+      "pa": "ਸਨੇਕ ਪਲਾਂਟ"
+    }
+  },
+  {
+    "id": "peace_lily",
+    "name": "Peace Lily",
+    "scientificName": "Spathiphyllum wallisii",
+    "category": "Indoor",
+    "wateringFrequency": 5,
+    "wateringInstructions": "Water every 5 days. Keep soil consistently moist but never soggy. Drops leaves when thirsty.",
+    "advantages": [
+      "Striking white spade-like blooms throughout the year",
+      "Actively cleans indoor toxins like benzene and formaldehyde",
+      "Foliage acts as an excellent organic indicator of watering needs"
+    ],
+    "disadvantages": [
+      "Contains calcium oxalate crystals, toxic to pets and children",
+      "Sensitive to high chlorine or fluoride in municipal tap water"
+    ],
+    "careTips": [
+      "Thrives in medium to low indirect light; direct sun burns leaves.",
+      "If possible, water with filtered, distilled, or rainwater.",
+      "Mist leaves occasionally to mimic its native tropical rainforest environment."
+    ],
+    "imageUrl": "peace_lily",
+    "family": "Araceae",
+    "genus": "Spathiphyllum",
+    "uses": [
+      "Actively cleans indoor toxins like benzene and formaldehyde"
+    ],
+    "localNames": {
+      "en": "Peace Lily",
+      "te": "పీస్ లిల్లీ",
+      "ta": "அமைதி லில்லி",
+      "hi": "पीस लिली",
+      "kn": "ಪೀಸ್ ಲಿಲ್ಲಿ",
+      "ml": "പീസ് ലില്ലി",
+      "bn": "পিস লিলি",
+      "mr": "पीस लिली",
+      "gu": "પીસ લીલી",
+      "pa": "ਪੀਸ ਲਿਲੀ"
+    }
+  },
+  {
+    "id": "lavender",
+    "name": "Lavender",
+    "scientificName": "Lavandula angustifolia",
+    "category": "Outdoor",
+    "wateringFrequency": 10,
+    "wateringInstructions": "Water every 10 days until established, then reduce watering. Thrives in dry, hot soil.",
+    "advantages": [
+      "Produces highly soothing fragrance proven to reduce anxiety",
+      "Attracts key beneficial pollinators like honeybees and butterflies",
+      "Beautiful purple spikes that can be harvested and dried"
+    ],
+    "disadvantages": [
+      "Struggles indoors due to high humidity and lack of intense sunlight",
+      "Requires yearly pruning to prevent woody, leggy growth"
+    ],
+    "careTips": [
+      "Plant in full outdoor sun (at least 8 hours of direct light).",
+      "Requires alkaline, sandy, or gravel-rich soil with super drainage.",
+      "Prune about one-third of the green growth in early spring."
+    ],
+    "imageUrl": "lavender",
+    "family": "Lamiaceae",
+    "genus": "Lavandula",
+    "uses": [
+      "Produces highly soothing fragrance proven to reduce anxiety"
+    ],
+    "localNames": {
+      "en": "Lavender",
+      "te": "లావెండర్",
+      "ta": "லாவெண்டர்",
+      "hi": "लैवेंडर",
+      "kn": "ಲ್ಯಾವೆಂಡರ್",
+      "ml": "ലാവെൻഡർ",
+      "bn": "ল্যাভেন্ডার",
+      "mr": "लॅव्हेंडर",
+      "gu": "લેવેન્ડર",
+      "pa": "ਲੈਵੇਂਡਰ"
+    }
+  },
+  {
+    "id": "giant_milkweed",
+    "name": "Giant Milkweed",
+    "scientificName": "Calotropis gigantea",
+    "category": "Outdoor",
+    "wateringFrequency": 10,
+    "wateringInstructions": "Water sparingly. Thrives in dry, sandy soil and requires full sun exposure.",
+    "advantages": [
+      "Attracts monarch butterflies and other pollinators",
+      "Highly drought-resistant and heat-tolerant",
+      "Used in traditional herbal medicines"
+    ],
+    "disadvantages": [
+      "Milky sap is highly toxic to humans and pets",
+      "Can become invasive if left unmanaged"
+    ],
+    "careTips": [
+      "Plant in full outdoor sun.",
+      "Do not overwater; ensure soil drains completely.",
+      "Wear gloves when handling to avoid irritation from the sap."
+    ],
+    "imageUrl": "giant_milkweed",
+    "family": "Apocynaceae",
+    "genus": "Calotropis",
+    "uses": [
+      "Used in traditional herbal medicines"
+    ],
+    "localNames": {
+      "en": "Giant Milkweed",
+      "te": "జిల్లేడు",
+      "ta": "எருக்கு",
+      "hi": "मदार",
+      "kn": "ಎಕ್ಕದ ಗಿಡ",
+      "ml": "എരുക്ക്",
+      "bn": "আকন্দ",
+      "mr": "रुई",
+      "gu": "આંકડો",
+      "pa": "ਅੱਕ"
+    }
+  }
+]
