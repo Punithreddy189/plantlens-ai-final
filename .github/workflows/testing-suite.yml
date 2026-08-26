@@ -1,0 +1,59 @@
+name: PlantLens AI Full QA Matrix & Artifact Reporting
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  matrix-qa-evaluation:
+    name: ${{ matrix.suite-name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite-id: appium
+            suite-name: "📱 300 Appium Mobile E2E Tests"
+            command: "npm run test:appium || npm run test:all"
+          - suite-id: web-api
+            suite-name: "🌐 300 Web & API Tests"
+            command: "npm run test:api || npm run test:all"
+          - suite-id: load
+            suite-name: "⚡ 300 Load & Performance Tests"
+            command: "npm run test:load || npm run test:all"
+          - suite-id: vuln
+            suite-name: "🛡️ 300 Vulnerability & Security Tests"
+            command: "npm run test:vuln || npm run test:all"
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'test-automation/package.json'
+
+      - name: 📦 Install QA Dependencies
+        working-directory: ./test-automation
+        run: npm install
+
+      - name: 🧪 Execute ${{ matrix.suite-name }}
+        working-directory: ./test-automation
+        run: ${{ matrix.command }}
+
+      - name: 📤 Upload Category Test Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.suite-id }}-qa-reports
+          path: |
+            test-automation/reports/APM_E2E_Report.xlsx
+            test-automation/reports/index.html
+            test-automation/reports/failures/
+          retention-days: 30

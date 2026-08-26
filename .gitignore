@@ -48,6 +48,8 @@ venv/
 env/
 **/tests/reports/
 **/tests/screenshots/
+test-automation/reports/failures/
+test-automation/reports/logs/
 
 # OS and Context artifacts
 .DS_Store

@@ -1,0 +1,51 @@
+{
+  "name": "plantlens-test-automation-framework",
+  "version": "2.0.0",
+  "description": "Enterprise-grade QA Automation Suite for PlantLens AI: Appium 2.x (APM/UiAutomator2), Web/API Testing, Load Testing, and Vulnerability Scanning with 1200+ Test Cases and Multi-Tab Excel Reporting",
+  "main": "src/runners/runAllTests.js",
+  "scripts": {
+    "test": "node src/runners/runAllTests.js",
+    "test:appium": "mocha src/suites/appium-mobile/*.spec.js --timeout 120000",
+    "test:api": "mocha src/suites/web-api/*.spec.js --timeout 60000",
+    "test:load": "node src/suites/load-testing/load_300_suite.js",
+    "test:vuln": "node src/suites/vulnerability-testing/vuln_300_suite.js",
+    "test:all": "node src/runners/runAllTests.js",
+    "generate:report": "node src/utils/excelReportGenerator.js",
+    "report:html": "node src/utils/htmlReportGenerator.js"
+  },
+  "keywords": [
+    "appium",
+    "appium-2.x",
+    "apm",
+    "uiautomator2",
+    "plantlens-ai",
+    "mocha",
+    "chai",
+    "mochawesome",
+    "exceljs",
+    "winston",
+    "load-testing",
+    "vulnerability-testing",
+    "github-actions"
+  ],
+  "author": "PlantLens AI QA Engineering Team",
+  "license": "MIT",
+  "dependencies": {
+    "appium": "^2.11.0",
+    "webdriverio": "^8.38.0",
+    "axios": "^1.7.2",
+    "chai": "^4.3.10",
+    "chai-as-promised": "^7.1.1",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "form-data": "^4.0.0",
+    "mocha": "^10.4.0",
+    "mochawesome": "^7.1.3",
+    "winston": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.14.2"
+  }
+}
