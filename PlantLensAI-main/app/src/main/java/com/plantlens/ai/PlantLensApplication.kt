@@ -12,6 +12,7 @@ class PlantLensApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        com.plantlens.ai.utils.ThemeLocaleManager.init(this)
         Log.d("PlantNet", "Key Length=${BuildConfig.PLANTNET_API_KEY?.length ?: 0}")
         createNotificationChannel()
     }

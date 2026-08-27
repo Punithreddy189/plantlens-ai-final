@@ -19,17 +19,37 @@ data class DiseaseAnalysisResult(
 ) : Serializable {
 
     val isHealthy: Boolean
-        get() = healthScore >= 80 && (
-            diseaseName.isNullOrBlank() ||
-            diseaseName.equals("None", ignoreCase = true) ||
-            diseaseName.equals("Healthy", ignoreCase = true)
-        )
+        get() {
+            val dName = diseaseName?.trim()?.lowercase() ?: ""
+            val isNoDiseaseNamed = dName.isEmpty() ||
+                dName.contains("none") ||
+                dName.contains("healthy") ||
+                dName.contains("no disease") ||
+                dName.contains("not detected") ||
+                dName.contains("optimal") ||
+                dName.contains("clean") ||
+                dName.contains("normal") ||
+                dName.contains("free of visible infection") ||
+                dName == "n/a"
+
+            val statusIsHealthy = healthStatus.lowercase().contains("healthy") ||
+                healthStatus.lowercase().contains("optimal") ||
+                healthStatus.lowercase().contains("normal")
+
+            return isNoDiseaseNamed || statusIsHealthy || (healthScore >= 75 && !hasCriticalDiseaseKeyword(dName))
+        }
+
+    private fun hasCriticalDiseaseKeyword(dName: String): Boolean {
+        return dName.contains("blight") || dName.contains("spot") || dName.contains("rust") ||
+               dName.contains("mildew") || dName.contains("rot") || dName.contains("wilt") ||
+               dName.contains("canker") || dName.contains("mosaic") || dName.contains("lesion")
+    }
 
     val isWarning: Boolean
-        get() = !isHealthy && healthScore >= 50
+        get() = !isHealthy && (healthScore >= 50 || healthStatus.lowercase().contains("monitor") || healthStatus.lowercase().contains("attention") || healthStatus.lowercase().contains("mild"))
 
     val isCritical: Boolean
-        get() = !isHealthy && healthScore < 50
+        get() = !isHealthy && !isWarning
 
     companion object {
         fun empty(): DiseaseAnalysisResult = DiseaseAnalysisResult()

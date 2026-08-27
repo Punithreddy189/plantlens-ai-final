@@ -249,10 +249,10 @@
     <!-- Disease Diagnostics & Health Assessment Strings -->
     <string name="disease_diagnostic_title">Plant Health &amp; Diagnostics 🩺</string>
     <string name="health_score_format">Health Score: %1$d%%</string>
-    <string name="foliage_healthy_title">🌿 Optimal Foliar Health</string>
+    <string name="foliage_healthy_title">🌿 Disease Not Detected</string>
     <string name="foliage_warning_title">⚠️ Foliar Stress Detected</string>
     <string name="foliage_critical_title">🚨 Active Disease Detected</string>
-    <string name="healthy_foliage">Healthy Foliage (No Disease Detected)</string>
+    <string name="healthy_foliage">No Disease Detected (Healthy Foliage)</string>
     <string name="unknown_condition">Unclassified Condition</string>
     <string name="treatment_plan_header">💊 Treatment &amp; Recovery Plan</string>
     <string name="symptoms_header">🔍 Symptoms &amp; Observations</string>

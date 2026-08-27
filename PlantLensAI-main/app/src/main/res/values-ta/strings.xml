@@ -249,10 +249,10 @@
     <!-- Disease Diagnostics & Health Assessment Strings -->
     <string name="disease_diagnostic_title">தாவர ஆரோக்கியம் &amp; நோய் கண்டறிதல் 🩺</string>
     <string name="health_score_format">ஆரோக்கிய மதிப்பீடு: %1$d%%</string>
-    <string name="foliage_healthy_title">🌿 உகந்த இலை ஆரோக்கியம்</string>
+    <string name="foliage_healthy_title">🌿 நோய் எதுவும் கண்டறியப்படவில்லை</string>
     <string name="foliage_warning_title">⚠️ இலை அழுத்தம் கண்டறியப்பட்டது</string>
     <string name="foliage_critical_title">🚨 தீவிர நோய் கண்டறியப்பட்டது</string>
-    <string name="healthy_foliage">ஆரோக்கியமான இலைகள் (நோய் எதுவும் இல்லை)</string>
+    <string name="healthy_foliage">நோய் எதுவும் இல்லை (ஆரோக்கியமான இலைகள்)</string>
     <string name="unknown_condition">வகைப்படுத்தப்படாத நிலை</string>
     <string name="treatment_plan_header">💊 சிகிச்சை &amp; மீட்பு திட்டம்</string>
     <string name="symptoms_header">🔍 அறிகுறிகள் &amp; அவதானிப்புகள்</string>

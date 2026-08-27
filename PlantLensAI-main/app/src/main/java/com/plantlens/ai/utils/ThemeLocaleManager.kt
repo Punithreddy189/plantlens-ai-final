@@ -48,6 +48,12 @@ object ThemeLocaleManager {
         // 2. Apply Language Locale
         val langCode = sharedPref.getString("pref_language", "en") ?: "en"
         TranslationManager.init(context, langCode)
+
+        val locales = LocaleListCompat.forLanguageTags(langCode)
+        val currentLocales = AppCompatDelegate.getApplicationLocales()
+        if (currentLocales.toLanguageTags() != locales.toLanguageTags()) {
+            AppCompatDelegate.setApplicationLocales(locales)
+        }
     }
 
     fun applyLanguage(context: Context, langCode: String) {

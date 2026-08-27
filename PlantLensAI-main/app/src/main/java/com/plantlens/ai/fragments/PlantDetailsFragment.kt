@@ -197,16 +197,26 @@ class PlantDetailsFragment : Fragment() {
                 } else {
                     val latest = historyList.maxByOrNull { it.timestamp } ?: historyList.first()
                     binding.detailDiseaseCard.visibility = View.VISIBLE
-                    val score = latest.healthScore.coerceIn(0, 100)
-                    binding.detailHealthProgressBar.progress = score
-                    binding.detailHealthScoreText.text = "$score%"
+                    val dName = latest.diseaseName.trim().lowercase()
+                    val isNoDiseaseNamed = dName.isEmpty() ||
+                        dName.contains("none") ||
+                        dName.contains("healthy") ||
+                        dName.contains("no disease") ||
+                        dName.contains("not detected") ||
+                        dName.contains("optimal") ||
+                        dName.contains("clean") ||
+                        dName.contains("normal") ||
+                        dName.contains("free of visible infection") ||
+                        dName == "n/a"
 
-                    val isHealthy = score >= 80 && (
-                        latest.diseaseName.isBlank() ||
-                        latest.diseaseName.equals("None", ignoreCase = true) ||
-                        latest.diseaseName.equals("Healthy", ignoreCase = true)
-                    )
-                    val isWarning = !isHealthy && score >= 50
+                    val isHealthy = isNoDiseaseNamed || latest.healthStatus.lowercase().contains("healthy") || (latest.healthScore >= 75 && !dName.contains("blight") && !dName.contains("spot") && !dName.contains("rust") && !dName.contains("mildew"))
+                    val isWarning = !isHealthy && (latest.healthScore >= 50 || latest.healthStatus.lowercase().contains("monitor") || latest.healthStatus.lowercase().contains("attention"))
+
+                    val score = if (isHealthy) {
+                        if (latest.healthScore < 80) 95 else latest.healthScore.coerceIn(80, 100)
+                    } else {
+                        latest.healthScore.coerceIn(0, 100)
+                    }
 
                     val statusColor = when {
                         isHealthy -> ContextCompat.getColor(requireContext(), R.color.success)
@@ -244,10 +254,12 @@ class PlantDetailsFragment : Fragment() {
                     binding.detailHealthStatusTitle.setTextColor(statusColor)
                     binding.detailDiseaseNameText.text = if (isHealthy) getString(R.string.healthy_foliage) else latest.diseaseName.ifBlank { "Foliar Stress / Blight" }
                     binding.detailDiseaseNameText.setTextColor(nameColor)
+                    binding.detailHealthScoreText.text = "$score%"
                     binding.detailHealthScoreText.setTextColor(statusColor)
+                    binding.detailHealthProgressBar.progress = score
                     binding.detailHealthProgressBar.progressTintList = ColorStateList.valueOf(statusColor)
 
-                    binding.detailDiseaseObservationsText.text = latest.observations.ifBlank { "Recorded during botanical diagnostic scan." }
+                    binding.detailDiseaseObservationsText.text = latest.observations.ifBlank { getString(R.string.standard_care_maintenance) }
                     binding.detailTreatmentText.text = latest.treatment.ifBlank { latest.recommendations.ifBlank { getString(R.string.standard_care_maintenance) } }
                 }
             }

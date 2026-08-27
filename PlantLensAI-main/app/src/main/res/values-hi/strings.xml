@@ -249,10 +249,10 @@
     <!-- Disease Diagnostics & Health Assessment Strings -->
     <string name="disease_diagnostic_title">पौधे का स्वास्थ्य और निदान 🩺</string>
     <string name="health_score_format">स्वास्थ्य स्कोर: %1$d%%</string>
-    <string name="foliage_healthy_title">🌿 इष्टतम पत्ती स्वास्थ्य</string>
+    <string name="foliage_healthy_title">🌿 कोई बीमारी नहीं पाई गई</string>
     <string name="foliage_warning_title">⚠️ पत्ती तनाव का पता चला</string>
     <string name="foliage_critical_title">🚨 सक्रिय रोग का पता चला</string>
-    <string name="healthy_foliage">स्वस्थ पत्ते (कोई बीमारी नहीं मिली)</string>
+    <string name="healthy_foliage">कोई बीमारी नहीं मिली (स्वस्थ पत्ते)</string>
     <string name="unknown_condition">अवर्गीकृत स्थिति</string>
     <string name="treatment_plan_header">💊 उपचार और पुनर्प्राप्ति योजना</string>
     <string name="symptoms_header">🔍 लक्षण और अवलोकन</string>

@@ -236,15 +236,23 @@ class ScannerViewModel @Inject constructor(
                             val avgConfidence = sharedPref.getFloat("analytics_avg_confidence", 0.0f)
                             val avgTime = sharedPref.getLong("analytics_avg_time", 0L)
 
+                            val isCachedHealthy = cachedRecord.diseaseName.isBlank() ||
+                                cachedRecord.diseaseName.contains("None", true) ||
+                                cachedRecord.diseaseName.contains("Healthy", true) ||
+                                cachedRecord.diseaseName.contains("No disease", true) ||
+                                cachedRecord.diseaseName.contains("Optimal", true) ||
+                                cachedRecord.diseaseName.contains("Not detected", true)
+
                             val scanResult = ScanResult(
                                 matchedPlant = plant,
                                 confidence = cachedRecord.confidence,
                                 top3Predictions = cachedRecord.top3Predictions,
                                 top3Confidences = cachedRecord.top3Confidences,
-                                healthScore = cachedRecord.healthScore,
-                                healthStatus = if (cachedRecord.healthScore >= 80) "✓ Healthy" else "⚠ Health Issue",
-                                diseaseName = cachedRecord.diseaseName,
+                                healthScore = if (isCachedHealthy && cachedRecord.healthScore < 80) 95 else cachedRecord.healthScore,
+                                healthStatus = if (isCachedHealthy) "🟢 Healthy" else "⚠ Health Issue",
+                                diseaseName = if (isCachedHealthy) "None (Healthy Foliage)" else cachedRecord.diseaseName,
                                 diseaseConfidence = cachedRecord.diseaseConfidence,
+                                diseaseSeverity = if (isCachedHealthy) "None (Optimal)" else "Moderate",
                                 treatmentRecommendation = cachedRecord.treatmentRecommendation,
                                 observations = cachedRecord.treatmentRecommendation,
                                 recommendations = cachedRecord.treatmentRecommendation,
@@ -322,15 +330,23 @@ class ScannerViewModel @Inject constructor(
                     val avgConfidence = sharedPref.getFloat("analytics_avg_confidence", 0.0f)
                     val avgTime = sharedPref.getLong("analytics_avg_time", 0L)
 
+                    val isCachedHealthy = firestoreCache.diseaseName.isBlank() ||
+                        firestoreCache.diseaseName.contains("None", true) ||
+                        firestoreCache.diseaseName.contains("Healthy", true) ||
+                        firestoreCache.diseaseName.contains("No disease", true) ||
+                        firestoreCache.diseaseName.contains("Optimal", true) ||
+                        firestoreCache.diseaseName.contains("Not detected", true)
+
                     val scanResult = ScanResult(
                         matchedPlant = plant,
                         confidence = firestoreCache.confidence,
                         top3Predictions = firestoreCache.top3Predictions,
                         top3Confidences = firestoreCache.top3Confidences,
-                        healthScore = firestoreCache.healthScore,
-                        healthStatus = if (firestoreCache.healthScore >= 80) "✓ Healthy" else "⚠ Health Issue",
-                        diseaseName = firestoreCache.diseaseName,
+                        healthScore = if (isCachedHealthy && firestoreCache.healthScore < 80) 95 else firestoreCache.healthScore,
+                        healthStatus = if (isCachedHealthy) "🟢 Healthy" else "⚠ Health Issue",
+                        diseaseName = if (isCachedHealthy) "None (Healthy Foliage)" else firestoreCache.diseaseName,
                         diseaseConfidence = firestoreCache.diseaseConfidence,
+                        diseaseSeverity = if (isCachedHealthy) "None (Optimal)" else "Moderate",
                         treatmentRecommendation = firestoreCache.treatmentRecommendation,
                         observations = firestoreCache.treatmentRecommendation,
                         recommendations = firestoreCache.treatmentRecommendation,
@@ -444,23 +460,60 @@ class ScannerViewModel @Inject constructor(
                             val onDeviceDiagnosis = classifier.diagnoseDisease(bitmap, cName)
                             val isGeminiDiseased = !response.disease.contains("None", ignoreCase = true) && 
                                     !response.disease.contains("Healthy", ignoreCase = true) && 
+                                    !response.disease.contains("No disease", ignoreCase = true) &&
+                                    !response.disease.contains("Optimal", ignoreCase = true) &&
+                                    !response.disease.contains("Not detected", ignoreCase = true) &&
+                                    !response.health_status.contains("Healthy", ignoreCase = true) &&
                                     response.disease.isNotBlank()
 
-                            val finalDiseaseName = if (isGeminiDiseased) response.disease else onDeviceDiagnosis.diseaseName
-                            val finalHealthStatus = if (isGeminiDiseased) response.health_status else onDeviceDiagnosis.healthStatus
-                            val finalHealthScore = if (isGeminiDiseased) {
-                                if (response.health_status.lowercase(Locale.US).contains("healthy")) 95 else 55
-                            } else {
-                                onDeviceDiagnosis.healthScore
+                            val isOnDeviceDiseased = !onDeviceDiagnosis.diseaseName.contains("None", ignoreCase = true) &&
+                                    !onDeviceDiagnosis.diseaseName.contains("Healthy", ignoreCase = true) &&
+                                    onDeviceDiagnosis.healthScore < 75
+
+                            val isDiseased = isGeminiDiseased || isOnDeviceDiseased
+
+                            val finalDiseaseName = when {
+                                isGeminiDiseased -> response.disease
+                                isOnDeviceDiseased -> onDeviceDiagnosis.diseaseName
+                                else -> "None (Healthy Foliage)"
                             }
-                            val finalTreatment = if (isGeminiDiseased && response.treatment.isNotBlank()) response.treatment else onDeviceDiagnosis.treatmentRecommendation
-                            val finalObservations = if (isGeminiDiseased && response.description.isNotBlank()) response.description else onDeviceDiagnosis.observations
-                            val finalRecommendations = if (isGeminiDiseased && response.prevention.isNotBlank()) response.prevention else onDeviceDiagnosis.recommendations
-                            val finalSeverity = if (isGeminiDiseased) {
-                                if (finalHealthScore > 85) "None (Optimal)" else "Moderate"
-                            } else {
-                                onDeviceDiagnosis.severity
+
+                            val finalHealthStatus = when {
+                                isGeminiDiseased -> response.health_status.ifBlank { "Needs Attention" }
+                                isOnDeviceDiseased -> onDeviceDiagnosis.healthStatus
+                                else -> "🟢 Healthy"
                             }
+
+                            val finalHealthScore = when {
+                                isGeminiDiseased -> if (response.health_status.lowercase(Locale.US).contains("critical")) 35 else 58
+                                isOnDeviceDiseased -> onDeviceDiagnosis.healthScore
+                                else -> 95
+                            }
+
+                            val finalTreatment = when {
+                                isGeminiDiseased && response.treatment.isNotBlank() -> response.treatment
+                                isOnDeviceDiseased -> onDeviceDiagnosis.treatmentRecommendation
+                                else -> if (response.treatment.isNotBlank()) response.treatment else onDeviceDiagnosis.treatmentRecommendation
+                            }
+
+                            val finalObservations = when {
+                                isGeminiDiseased && response.description.isNotBlank() -> response.description
+                                isOnDeviceDiseased -> onDeviceDiagnosis.observations
+                                else -> if (response.description.isNotBlank()) response.description else onDeviceDiagnosis.observations
+                            }
+
+                            val finalRecommendations = when {
+                                isGeminiDiseased && response.prevention.isNotBlank() -> response.prevention
+                                isOnDeviceDiseased -> onDeviceDiagnosis.recommendations
+                                else -> if (response.prevention.isNotBlank()) response.prevention else onDeviceDiagnosis.recommendations
+                            }
+
+                            val finalSeverity = when {
+                                !isDiseased -> "None (Optimal)"
+                                finalHealthScore < 50 -> "Severe"
+                                else -> "Moderate"
+                            }
+
                             val finalMethod = if (isGeminiDiseased) "☁ Gemini 1.5 Flash Vision" else onDeviceDiagnosis.assessmentMethod
 
                             val top3Names = listOf(cName)

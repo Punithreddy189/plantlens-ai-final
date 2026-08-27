@@ -36,16 +36,20 @@ class GeminiPlantService @Inject constructor(
         - If the image DOES contain a plant, flower, tree, or leaf:
           Set "is_plant": true, "success": true, and "error_message": "".
           Carefully examine the leaf surface, foliar spots, margins, and stems for any pathological symptoms:
-          - Necrotic brown/black spots, concentric rings (e.g. Early Blight, Late Blight, Septoria Leaf Spot, Anthracnose).
+          - Small circular dark brown/black spots with tan/gray centers and distinct bright yellow halos (e.g. Septoria Leaf Spot (Septoria lycopersici), Early Blight (Alternaria solani), Bacterial Spot (Xanthomonas)).
+          - Large necrotic blight lesions with concentric target rings or tissue decay (e.g. Early Blight, Late Blight, Anthracnose).
           - White powdery or velvety fungal patches (e.g. Powdery Mildew, Downy Mildew, Leaf Mold).
           - Orange/reddish pustules (e.g. Rust).
-          - Interveinal yellowing, chlorosis, or mineral deficiency.
+          - Diffuse interveinal yellowing (pure nutrient chlorosis) without any necrotic spots.
+
+          CRITICAL PATHOLOGY RULE:
+          If the foliage shows dark brown or black necrotic spots with yellow halos (such as on tomato, rose, or garden foliage), do NOT diagnose simple chlorosis or watering stress. You MUST diagnose the specific fungal/bacterial leaf spot disease (e.g. 'Tomato Septoria Leaf Spot (Septoria lycopersici)', 'Tomato Early Blight (Alternaria solani)', 'Rose Black Spot', 'Bacterial Leaf Spot').
           
           If symptoms are present:
-          - Set "health_status": "Diseased" or "Needs Attention".
-          - Provide the precise common and scientific disease name (e.g. 'Tomato Early Blight (Alternaria solani)', 'Tomato Septoria Leaf Spot', 'Rose Black Spot', 'Powdery Mildew').
-          - In "treatment", give clear step-by-step actionable remedies (fungicide spray type, pruning directions, soil watering practices).
-          - In "description", detail visible symptoms and lesion distribution.
+          - Set "health_status": "Diseased" or "Critical".
+          - Provide the precise common and scientific disease name (e.g. 'Tomato Septoria Leaf Spot (Septoria lycopersici)', 'Tomato Early Blight (Alternaria solani)', 'Rose Black Spot (Diplocarpon rosae)').
+          - In "treatment", give clear step-by-step actionable remedies (pruning infected leaves, no overhead watering, mulch, copper-based or chlorothalonil fungicide spray).
+          - In "description", detail visible lesion morphology and yellow chlorotic halos.
           
           If foliage is completely clean, green, and disease-free:
           - Set "health_status": "Healthy".
@@ -135,22 +139,27 @@ class GeminiPlantService @Inject constructor(
             val sciName = json.optString("scientific_name").ifBlank { fallbackSciName ?: "Botanical Species" }
             val confidence = json.optDouble("confidence", 0.92)
             var healthStatus = json.optString("health_status").ifBlank { "Healthy" }
-            var disease = json.optString("disease").ifBlank { "None (Healthy)" }
-            var description = json.optString("description").ifBlank { "Plant foliage inspected." }
-            var treatment = json.optString("treatment").ifBlank { "Maintain regular plant care." }
+            var disease = json.optString("disease").ifBlank { "None (Healthy Foliage)" }
+            var description = json.optString("description").ifBlank { "Plant foliage is vibrant and free of visible infection." }
+            var treatment = json.optString("treatment").ifBlank { "Maintain regular plant care and optimal sunlight." }
             val prevention = json.optString("prevention").ifBlank { "Ensure adequate air circulation and clean drainage." }
             val watering = json.optString("watering").ifBlank { "Water when top 2 inches of soil feel dry." }
             val sunlight = json.optString("sunlight").ifBlank { "Bright indirect light." }
             val fertilizer = json.optString("fertilizer").ifBlank { "Apply balanced fertilizer monthly during growing season." }
 
-            // Cross-validate with on-device computer vision: if Gemini says Healthy but leaf has severe necrosis/lesions
-            val onDeviceDiagnosis = classifier.diagnoseDisease(bitmap, plantName)
-            if (onDeviceDiagnosis.healthScore < 75 && (disease.contains("None", ignoreCase = true) || disease.contains("Healthy", ignoreCase = true))) {
-                Log.i(TAG, "On-device CV detected foliar disease (${onDeviceDiagnosis.diseaseName}) overriding false healthy classification.")
-                disease = onDeviceDiagnosis.diseaseName
-                healthStatus = onDeviceDiagnosis.healthStatus
-                description = onDeviceDiagnosis.observations
-                treatment = onDeviceDiagnosis.treatmentRecommendation
+            val isNoDisease = disease.contains("None", ignoreCase = true) ||
+                    disease.contains("Healthy", ignoreCase = true) ||
+                    disease.contains("No disease", ignoreCase = true) ||
+                    disease.contains("Optimal", ignoreCase = true) ||
+                    disease.contains("Not detected", ignoreCase = true) ||
+                    healthStatus.contains("Healthy", ignoreCase = true)
+
+            if (isNoDisease) {
+                healthStatus = "Healthy"
+                disease = "None (Healthy Foliage)"
+                if (treatment.contains("fungicide", ignoreCase = true) || treatment.contains("prune diseased", ignoreCase = true)) {
+                    treatment = "Foliage is vibrant and free of visible infection. Maintain standard watering and sunlight care."
+                }
             }
 
             return ClassificationResponse(

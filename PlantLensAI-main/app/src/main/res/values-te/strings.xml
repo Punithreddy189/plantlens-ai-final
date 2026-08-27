@@ -249,10 +249,10 @@
     <!-- Disease Diagnostics & Health Assessment Strings -->
     <string name="disease_diagnostic_title">మొక్క ఆరోగ్యం &amp; రోగ నిర్ధారణ 🩺</string>
     <string name="health_score_format">ఆరోగ్య స్కోరు: %1$d%%</string>
-    <string name="foliage_healthy_title">🌿 సరైన ఆకు ఆరోగ్యం</string>
+    <string name="foliage_healthy_title">🌿 వ్యాధి గుర్తించబడలేదు</string>
     <string name="foliage_warning_title">⚠️ ఆకు ఒత్తిడి గుర్తించబడింది</string>
     <string name="foliage_critical_title">🚨 క్రియాశీల వ్యాధి గుర్తించబడింది</string>
-    <string name="healthy_foliage">ఆరోగ్యకరమైన ఆకులు (వ్యాధి గుర్తించబడలేదు)</string>
+    <string name="healthy_foliage">వ్యాధి గుర్తించబడలేదు (ఆరోగ్యకరమైన ఆకులు)</string>
     <string name="unknown_condition">వర్గీకరించని పరిస్థితి</string>
     <string name="treatment_plan_header">💊 చికిత్స &amp; రికవరీ ప్రణాళిక</string>
     <string name="symptoms_header">🔍 లక్షణాలు &amp; పరిశీలనలు</string>

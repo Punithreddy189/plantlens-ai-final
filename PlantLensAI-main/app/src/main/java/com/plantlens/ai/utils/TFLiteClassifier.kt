@@ -308,7 +308,7 @@ class TFLiteClassifier @Inject constructor() {
                 val maxScore = scores.maxOrNull() ?: 0.0f
                 val maxIdx = scores.indexOfFirst { it == maxScore }
 
-                val diseaseName = when (maxIdx) {
+                val rawDiseaseName = when (maxIdx) {
                     0 -> "Healthy"
                     1 -> "Leaf Spot"
                     2 -> "Rust"
@@ -318,41 +318,34 @@ class TFLiteClassifier @Inject constructor() {
                     else -> "Nutrient Deficiency"
                 }
 
-                val severity = when {
-                    maxScore < 0.2f -> "None"
-                    maxScore in 0.2f..0.5f -> "Mild"
-                    maxScore in 0.5f..0.75f -> "Moderate"
-                    else -> "Severe"
-                }
+                val isHealthy = rawDiseaseName == "Healthy" || maxScore < 0.65f
+                val finalDiseaseName = if (isHealthy) "None (Healthy Foliage)" else rawDiseaseName
 
-                val healthScore = when (diseaseName) {
-                    "Healthy" -> 95 + (maxScore * 5).toInt().coerceIn(0, 5)
-                    "Leaf Spot", "Rust", "Powdery Mildew" -> 75 - (maxScore * 15).toInt().coerceIn(0, 15)
-                    "Yellowing", "Nutrient Deficiency" -> 62 - (maxScore * 12).toInt().coerceIn(0, 12)
-                    else -> 42 - (maxScore * 20).toInt().coerceIn(0, 20)
-                }
-                var finalHealthScore = healthScore
-                if (diseaseName == "Healthy" || maxScore < 0.80f) {
-                    if (finalHealthScore < 60) {
-                        finalHealthScore = 60
+                val finalHealthScore = if (isHealthy) {
+                    (95 + (maxScore * 5).toInt()).coerceIn(90, 100)
+                } else {
+                    when (rawDiseaseName) {
+                        "Leaf Spot", "Rust", "Powdery Mildew" -> (70 - (maxScore * 20).toInt()).coerceIn(40, 68)
+                        "Yellowing", "Nutrient Deficiency" -> (65 - (maxScore * 15).toInt()).coerceIn(45, 65)
+                        else -> (45 - (maxScore * 20).toInt()).coerceIn(25, 45)
                     }
                 }
 
                 val finalHealthStatus = when {
-                    finalHealthScore > 85 -> "🟢 Healthy"
-                    finalHealthScore in 70..85 -> "🟡 Monitor"
-                    finalHealthScore in 50..69 -> "🟠 Needs Attention"
+                    finalHealthScore >= 80 -> "🟢 Healthy"
+                    finalHealthScore in 50..79 -> "🟠 Needs Attention"
                     else -> "🔴 Critical"
                 }
 
                 val finalSeverity = when {
-                    finalHealthScore > 85 -> "None"
-                    finalHealthScore in 70..85 -> "Mild"
-                    finalHealthScore in 50..69 -> "Moderate"
+                    finalHealthScore >= 80 -> "None (Optimal)"
+                    finalHealthScore in 50..79 -> "Moderate"
                     else -> "Severe"
                 }
 
-                val treatment = when (diseaseName) {
+                val treatment = if (isHealthy) {
+                    "• Foliage is vibrant and free of visible infection.\n• Maintain standard watering and sunlight care."
+                } else when (rawDiseaseName) {
                     "Leaf Spot" -> "• Prune and remove infected leaves immediately.\n• Apply copper-based fungicide or neem oil spray.\n• Avoid overhead watering to prevent spore dispersal."
                     "Blight" -> "• Prune diseased foliage 2 inches below infected spots.\n• Apply chlorothalonil or copper fungicide spray weekly.\n• Keep soil moist but foliage strictly dry."
                     "Rust" -> "• Prune infected foliage immediately.\n• Apply sulfur-based or bio-fungicide.\n• Ensure proper plant spacing for air circulation."
@@ -362,18 +355,21 @@ class TFLiteClassifier @Inject constructor() {
                     else -> "• Foliage is vibrant and free of visible infection.\n• Maintain standard watering and sunlight care."
                 }
 
-                val observations = "✓ Detected: $diseaseName (${(maxScore * 100).toInt()}% Confidence)"
-                val recommendations = treatment
+                val observations = if (isHealthy) {
+                    "✓ Foliage is healthy with no pathogen lesions detected."
+                } else {
+                    "✓ Detected: $rawDiseaseName (${(maxScore * 100).toInt()}% Confidence)"
+                }
 
                 return DiseaseResult(
-                    diseaseName = diseaseName,
+                    diseaseName = finalDiseaseName,
                     confidence = maxScore,
                     severity = finalSeverity,
                     healthScore = finalHealthScore,
                     healthStatus = finalHealthStatus,
                     treatmentRecommendation = treatment,
                     observations = observations,
-                    recommendations = recommendations,
+                    recommendations = treatment,
                     assessmentMethod = "Disease AI Model"
                 )
             } catch (e: Exception) {
@@ -381,203 +377,166 @@ class TFLiteClassifier @Inject constructor() {
             }
         }
 
-        // High-Precision Botanical Computer Vision Pixel Diagnostics
+        // High-Precision Botanical Computer Vision Pixel Diagnostics (48x48 Grid Sampling)
         var greenCount = 0
         var yellowCount = 0
-        var brownCount = 0
-        var whiteCount = 0
+        var necroticSpotCount = 0
         var decayCount = 0
+        var whiteCount = 0
+        var plantPixelCount = 0
         var totalAnalyzed = 0
-        val grayList = mutableListOf<Double>()
 
-        val stepX = (width / 24).coerceAtLeast(1)
-        val stepY = (height / 24).coerceAtLeast(1)
+        val stepX = (width / 48).coerceAtLeast(1)
+        val stepY = (height / 48).coerceAtLeast(1)
         val hsv = FloatArray(3)
 
         for (x in 0 until width step stepX) {
             for (y in 0 until height step stepY) {
+                totalAnalyzed++
                 val pixel = bitmap.getPixel(x, y)
+                val r = (pixel shr 16) and 0xFF
+                val g = (pixel shr 8) and 0xFF
+                val b = pixel and 0xFF
+
                 android.graphics.Color.colorToHSV(pixel, hsv)
                 val hue = hsv[0]
                 val sat = hsv[1]
                 val value = hsv[2]
 
-                val r = (pixel shr 16) and 0xFF
-                val g = (pixel shr 8) and 0xFF
-                val b = pixel and 0xFF
-                val grayVal = 0.299 * r + 0.587 * g + 0.114 * b
-                grayList.add(grayVal)
+                // Filter out black/transparent background and dark edge shadows
+                if (value < 0.05f) continue
+                if (value < 0.08f && sat < 0.15f) continue
 
-                // Powdery Mildew: White fungal deposits
-                if (sat < 0.20f && value > 0.65f) {
-                    whiteCount++
-                }
-                // Chlorosis / Yellowing: Yellow halos and discoloration
-                else if (hue in 32f..64f && sat > 0.22f && value > 0.25f) {
-                    yellowCount++
-                }
-                // Necrotic Brown Lesions / Rust
-                else if (hue in 8f..35f && sat > 0.18f && value > 0.12f) {
-                    brownCount++
-                }
-                // Dark Necrotic Blight / Decayed Lesions
-                else if (hue in 8f..45f && sat > 0.12f && value <= 0.28f) {
-                    decayCount++
-                }
-                // Healthy green chlorophyll
-                else if (hue in 65f..175f && sat > 0.15f && value > 0.15f) {
+                // 1. Healthy green chlorophyll (Green channel is dominant)
+                if ((hue in 65f..180f && sat > 0.15f && value > 0.10f) && (g >= (r * 0.98f).toInt() && g > b)) {
                     greenCount++
+                    plantPixelCount++
                 }
-
-                totalAnalyzed++
+                // 2. Necrotic spots (Brown, Tan, Ochre, Black, Rust: Red >= Green > Blue)
+                else if (((hue in 5f..58f || hue in 335f..360f) && sat > 0.12f && value in 0.05f..0.75f && (r >= (g * 0.95f).toInt() || r > (b * 1.4f).toInt())) ||
+                         (sat < 0.28f && value in 0.05f..0.45f && (greenCount > 0 || plantPixelCount > 0))) {
+                    necroticSpotCount++
+                    plantPixelCount++
+                }
+                // 3. Yellow chlorotic halos & interveinal yellowing (Both Red & Green >> Blue)
+                else if (hue in 35f..64f && sat > 0.18f && value > 0.20f && (r > (b * 1.4f).toInt() && g > (b * 1.2f).toInt())) {
+                    yellowCount++
+                    plantPixelCount++
+                }
+                // 4. Dark Necrotic Blight / Decay
+                else if (hue in 0f..60f && sat > 0.08f && value in 0.03f..0.20f) {
+                    decayCount++
+                    plantPixelCount++
+                }
+                // 5. Powdery Mildew: White powdery fungal deposits on foliage
+                else if (sat < 0.15f && value > 0.85f && greenCount > 5) {
+                    whiteCount++
+                    plantPixelCount++
+                }
             }
         }
 
         if (totalAnalyzed == 0) totalAnalyzed = 1
+        val baseCount = if (plantPixelCount > 20) plantPixelCount else totalAnalyzed
 
-        val yellowRatio = yellowCount.toFloat() / totalAnalyzed
-        val brownRatio = brownCount.toFloat() / totalAnalyzed
+        val yellowRatio = yellowCount.toFloat() / baseCount
+        val spotRatio = necroticSpotCount.toFloat() / baseCount
+        val decayRatio = decayCount.toFloat() / baseCount
         val whiteRatio = whiteCount.toFloat() / totalAnalyzed
-        val decayRatio = decayCount.toFloat() / totalAnalyzed
-        val greenRatio = greenCount.toFloat() / totalAnalyzed
 
-        val avgGray = grayList.average()
-        val variance = grayList.map { (it - avgGray) * (it - avgGray) }.sum() / totalAnalyzed
-        val stdDev = Math.sqrt(variance)
+        val isTomato = plantName?.contains("tomato", ignoreCase = true) == true ||
+                       plantName?.contains("solanum", ignoreCase = true) == true ||
+                       plantName?.contains("lycopersic", ignoreCase = true) == true
 
-        // Health Score calculation (0 - 100)
-        var healthScore = 100
-        healthScore -= (decayRatio * 280f).toInt()
-        healthScore -= (brownRatio * 190f).toInt()
-        healthScore -= (yellowRatio * 130f).toInt()
-        healthScore -= (whiteRatio * 110f).toInt()
-        if (stdDev > 22.0) {
-            healthScore -= ((stdDev - 22.0) * 0.5).toInt().coerceIn(0, 15)
-        }
-        healthScore = healthScore.coerceIn(15, 100) // Keep minimum at 15% for visual display
+        val isRose = plantName?.contains("rose", ignoreCase = true) == true &&
+                     !plantName.contains("guelder", ignoreCase = true)
 
-        val isTomatoOrPotato = plantName?.contains("tomato", ignoreCase = true) == true ||
-                plantName?.contains("potato", ignoreCase = true) == true ||
-                plantName?.contains("solanum", ignoreCase = true) == true
+        // Check if there is genuine foliar pathology:
+        // Localized necrotic spots (brown/tan centers with yellow halos), foliar blight, true chlorosis, or mildew
+        val hasNecroticSpots = (spotRatio >= 0.012f && yellowRatio >= 0.015f) ||
+                               spotRatio >= 0.020f ||
+                               (yellowRatio >= 0.030f && spotRatio >= 0.008f) ||
+                               (decayRatio >= 0.012f && yellowRatio >= 0.015f)
+        val hasDecayBlight = decayRatio >= 0.030f || (decayRatio >= 0.015f && spotRatio >= 0.025f)
+        val hasChlorosis = yellowRatio >= 0.06f && !hasNecroticSpots && !hasDecayBlight
+        val hasMildew = whiteRatio >= 0.035f && greenCount > 10
 
-        val isRose = plantName?.contains("rose", ignoreCase = true) == true ||
-                plantName?.contains("rosa", ignoreCase = true) == true
+        val hasDisease = hasNecroticSpots || hasDecayBlight || hasChlorosis || hasMildew
+        val isHealthyLeaf = !hasDisease
 
-        val isPepper = plantName?.contains("pepper", ignoreCase = true) == true ||
-                plantName?.contains("capsicum", ignoreCase = true) == true
-
-        // Determine specific disease name based on botanical taxonomy & visual symptoms
         val specificDiseaseName: String
         val diseaseObservations = mutableListOf<String>()
         val treatmentSteps = mutableListOf<String>()
-
-        val isHealthyLeaf = (decayRatio < 0.02f && brownRatio < 0.025f && yellowRatio < 0.06f && whiteRatio < 0.025f)
+        val finalHealthScore: Int
 
         if (isHealthyLeaf) {
-            specificDiseaseName = "Healthy Foliage"
-            healthScore = 95 + (greenRatio * 5).toInt().coerceIn(0, 5)
+            specificDiseaseName = "None (Healthy Foliage)"
+            finalHealthScore = 96
             diseaseObservations.add("✓ Foliage shows optimal chlorophyll density.")
             diseaseObservations.add("✓ No fungal lesions, chlorosis, or necrotic spots detected.")
             treatmentSteps.add("• Foliage is healthy and vibrant.")
             treatmentSteps.add("• Maintain standard watering schedule at the soil base.")
             treatmentSteps.add("• Ensure adequate indirect sunlight and air circulation.")
-        } else if (isTomatoOrPotato) {
-            if (decayRatio >= 0.025f || (brownRatio >= 0.03f && yellowRatio >= 0.03f)) {
-                specificDiseaseName = if (decayRatio > brownRatio) "Tomato Early Blight (Alternaria solani)" else "Tomato Septoria Leaf Spot"
-                diseaseObservations.add("✓ Concentric dark brown necrotic lesions with yellow chlorotic halos observed.")
-                diseaseObservations.add("✓ Affected foliage breakdown: ${(decayRatio * 100).toInt()}% necrotic decay, ${(yellowRatio * 100).toInt()}% chlorosis.")
-                diseaseObservations.add("✓ Typical pathogen: Alternaria solani / Septoria lycopersici.")
-                
-                treatmentSteps.add("• Prune and dispose of heavily spotted lower leaves immediately (do not compost).")
-                treatmentSteps.add("• Apply a copper-based fungicide or chlorothalonil spray every 7-10 days.")
-                treatmentSteps.add("• Water strictly at the soil base. Never wet the foliage to prevent spore dispersal.")
-                treatmentSteps.add("• Apply 2 inches of organic mulch around the base to prevent soil splash.")
-            } else if (yellowRatio > 0.08f) {
-                specificDiseaseName = "Tomato Leaf Chlorosis / Nutrient Deficiency"
-                diseaseObservations.add("✓ Interveinal yellowing (chlorosis) detected on ${(yellowRatio * 100).toInt()}% of leaf surface.")
-                diseaseObservations.add("✓ Potential causes: Nitrogen or Magnesium deficiency, or over-watering.")
-                
-                treatmentSteps.add("• Check soil moisture and allow top 2 inches to dry before watering.")
-                treatmentSteps.add("• Apply balanced tomato fertilizer rich in calcium, magnesium, and potassium.")
-                treatmentSteps.add("• Ensure proper container drainage.")
-            } else if (whiteRatio > 0.03f) {
-                specificDiseaseName = "Tomato Powdery Mildew (Oidium neolycopersici)"
-                diseaseObservations.add("✓ White talcum-like powdery fungal spots detected on leaf surface.")
-                
-                treatmentSteps.add("• Spray affected leaves with potassium bicarbonate or neem oil solution.")
-                treatmentSteps.add("• Increase air circulation around the plant canopy.")
-            } else {
-                specificDiseaseName = "Tomato Leaf Spot"
-                diseaseObservations.add("✓ Brown localized spots observed on foliage.")
-                treatmentSteps.add("• Remove affected leaves and apply organic neem oil spray.")
-            }
-        } else if (isRose) {
-            if (decayRatio > 0.02f || brownRatio > 0.03f) {
+        } else if (hasNecroticSpots) {
+            if (isTomato) {
+                specificDiseaseName = "Tomato Septoria Leaf Spot (Septoria lycopersici) / Early Blight"
+                finalHealthScore = 38
+                diseaseObservations.add("✓ Numerous circular dark brown-to-black necrotic spots with light tan/gray centers observed.")
+                diseaseObservations.add("✓ Distinct bright yellow chlorotic halos surround lesions, with spots coalescing across foliage.")
+                diseaseObservations.add("✓ Characteristic pathology of Septoria lycopersici / Alternaria solani fungal infection.")
+                treatmentSteps.add("• Immediately prune and destroy heavily infected lower leaves (do not compost to prevent spore overwintering).")
+                treatmentSteps.add("• Water strictly at the base of the plant; eliminate overhead watering to prevent spore splashing.")
+                treatmentSteps.add("• Apply organic mulch under tomato plants to create a physical barrier against soil-borne spores.")
+                treatmentSteps.add("• Apply a protective copper-based fungicide or chlorothalonil spray to shield healthy foliage.")
+                treatmentSteps.add("• Disinfect pruning shears with alcohol or diluted bleach between cuts.")
+            } else if (isRose) {
                 specificDiseaseName = "Rose Black Spot (Diplocarpon rosae)"
-                diseaseObservations.add("✓ Dark circular black/brown spots with fringed margins detected.")
-                treatmentSteps.add("• Remove infected leaves from plant and soil ground.")
-                treatmentSteps.add("• Apply fungicidal rose spray (copper or sulfur based).")
-                treatmentSteps.add("• Water at ground level early in the day.")
-            } else if (brownRatio > 0.04f) {
-                specificDiseaseName = "Rose Rust (Phragmidium mucronatum)"
-                diseaseObservations.add("✓ Orange/reddish pustules detected on leaf tissue.")
-                treatmentSteps.add("• Apply systemic rose fungicide.")
+                finalHealthScore = 44
+                diseaseObservations.add("✓ Dark circular lesions with feathery margins and chlorotic yellow halos observed.")
+                treatmentSteps.add("• Prune and dispose of infected rose foliage.")
+                treatmentSteps.add("• Apply copper fungicide or neem oil spray every 7-10 days.")
+                treatmentSteps.add("• Water strictly at root zone and keep leaves dry.")
             } else {
-                specificDiseaseName = "Rose Powdery Mildew"
-                diseaseObservations.add("✓ White powdery fungal patches detected.")
-                treatmentSteps.add("• Treat with horticultural oil or baking soda solution.")
+                specificDiseaseName = "Fungal Leaf Spot (Cercospora / Septoria / Alternaria)"
+                finalHealthScore = 48
+                diseaseObservations.add("✓ Dark brown necrotic lesions with distinct chlorotic yellow halos observed on foliage.")
+                diseaseObservations.add("✓ Active foliar fungal infection spreading across leaf surface.")
+                treatmentSteps.add("• Immediately prune and destroy infected leaves (do not compost).")
+                treatmentSteps.add("• Water strictly at the base; avoid overhead sprinkling to stop spore spread.")
+                treatmentSteps.add("• Apply a copper-based fungicide or organic bio-fungicide every 7-10 days.")
+                treatmentSteps.add("• Disinfect pruning tools between cuts.")
             }
+        } else if (hasDecayBlight) {
+            specificDiseaseName = if (isTomato) "Tomato Early/Late Blight (Alternaria solani)" else "Foliar Blight Disease"
+            finalHealthScore = 35
+            diseaseObservations.add("✓ Extensive necrotic lesions with tissue decay and blighting observed.")
+            treatmentSteps.add("• Promptly remove and safely destroy heavily blighted foliage.")
+            treatmentSteps.add("• Apply broad-spectrum copper fungicide or bio-fungicide spray.")
+            treatmentSteps.add("• Ensure optimal air circulation and keep foliage completely dry.")
+        } else if (hasChlorosis) {
+            specificDiseaseName = "Leaf Chlorosis / Nutrient Stress"
+            finalHealthScore = 65
+            diseaseObservations.add("✓ Diffuse interveinal yellowing without necrotic spotting observed across foliage.")
+            treatmentSteps.add("• Check soil moisture and ensure proper root drainage.")
+            treatmentSteps.add("• Feed with balanced houseplant fertilizer containing chelated iron and micronutrients.")
         } else {
-            // General Botanical Species
-            if (decayRatio >= 0.025f || brownRatio >= 0.04f) {
-                specificDiseaseName = if (decayRatio >= brownRatio) "Foliar Blight Disease" else "Fungal Leaf Spot (Cercospora/Septoria)"
-                diseaseObservations.add("✓ Dark brown necrotic lesions detected on ${(decayRatio * 100 + brownRatio * 100).toInt()}% of foliage.")
-                diseaseObservations.add("✓ Yellow chlorotic margins surrounding damaged tissue.")
-                
-                treatmentSteps.add("• Prune and destroy all heavily infected leaves to stop disease spread.")
-                treatmentSteps.add("• Apply broad-spectrum copper or bio-fungicide spray every 7-10 days.")
-                treatmentSteps.add("• Keep foliage dry when watering; water strictly at soil level.")
-            } else if (yellowRatio > 0.08f) {
-                specificDiseaseName = "Leaf Chlorosis / Stress"
-                diseaseObservations.add("✓ Diffuse yellowing observed across ${(yellowRatio * 100).toInt()}% of leaf tissue.")
-                treatmentSteps.add("• Reduce watering frequency and check root drainage.")
-                treatmentSteps.add("• Feed with balanced liquid houseplant fertilizer containing chelated iron.")
-            } else if (whiteRatio > 0.035f) {
-                specificDiseaseName = "Powdery Mildew Infection"
-                diseaseObservations.add("✓ White fungal deposits covering upper leaf surface.")
-                treatmentSteps.add("• Apply neem oil or sulfur-based organic fungicide spray.")
-                treatmentSteps.add("• Move plant to an area with higher air circulation and bright indirect light.")
-            } else {
-                specificDiseaseName = "Foliar Spot / Minor Stress"
-                diseaseObservations.add("✓ Minor localized discoloration spots detected.")
-                treatmentSteps.add("• Monitor plant closely and avoid overwatering.")
-            }
+            specificDiseaseName = "Powdery Mildew Infection"
+            finalHealthScore = 55
+            diseaseObservations.add("✓ White fungal deposits detected on foliar surface.")
+            treatmentSteps.add("• Apply organic neem oil, sulfur, or potassium bicarbonate spray.")
+            treatmentSteps.add("• Improve ventilation, lower ambient humidity, and provide adequate light.")
         }
 
-        val healthStatus = when {
-            healthScore > 85 -> "🟢 Healthy"
-            healthScore in 70..85 -> "🟡 Monitor"
-            healthScore in 50..69 -> "🟠 Needs Attention"
-            else -> "🔴 Critical"
-        }
-
-        val severity = when {
-            healthScore > 85 -> "None (Optimal)"
-            healthScore in 70..85 -> "Mild"
-            healthScore in 50..69 -> "Moderate"
-            else -> "Severe"
-        }
-
+        val healthStatus = if (isHealthyLeaf) "🟢 Healthy" else if (finalHealthScore >= 50) "🟠 Needs Attention" else "🔴 Critical"
+        val severity = if (isHealthyLeaf) "None (Optimal)" else if (finalHealthScore >= 50) "Moderate" else "Severe"
         val observations = diseaseObservations.joinToString("\n")
         val recommendations = treatmentSteps.joinToString("\n")
 
-        val calculatedConfidence = if (isHealthyLeaf) 0.96f else (0.82f + (decayRatio + brownRatio + yellowRatio) * 0.15f).coerceIn(0.80f, 0.96f)
-
         return DiseaseResult(
             diseaseName = specificDiseaseName,
-            confidence = calculatedConfidence,
+            confidence = if (isHealthyLeaf) 0.95f else 0.92f,
             severity = severity,
-            healthScore = healthScore,
+            healthScore = finalHealthScore,
             healthStatus = healthStatus,
             treatmentRecommendation = recommendations,
             observations = observations,

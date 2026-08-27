@@ -324,7 +324,12 @@ class PlantResultFragment : Fragment() {
     }
 
     private fun renderDiagnosis(result: DiseaseAnalysisResult) {
-        val score = result.healthScore.coerceIn(0, 100)
+        val rawScore = result.healthScore
+        val score = if (result.isHealthy) {
+            if (rawScore < 80) 95 else rawScore.coerceIn(80, 100)
+        } else {
+            rawScore.coerceIn(0, 100)
+        }
         binding.healthScoreProgressBar.progress = score
         binding.healthScorePercentText.text = "$score%"
 
@@ -360,8 +365,13 @@ class PlantResultFragment : Fragment() {
         binding.offlineDiagnosticNotice.visibility = if (isOffline) View.VISIBLE else View.GONE
 
         // Severity
-        val rawSeverity = result.severity?.takeIf { it.isNotBlank() && it != "N/A" }
-        binding.diseaseSeverityBadge.text = getString(R.string.severity_label_format, rawSeverity ?: if (result.isHealthy) "None (Optimal)" else "Moderate")
+        val displayedSeverity = if (result.isHealthy) {
+            "None (Optimal)"
+        } else {
+            val rawSeverity = result.severity?.takeIf { it.isNotBlank() && it != "N/A" }
+            rawSeverity ?: "Moderate"
+        }
+        binding.diseaseSeverityBadge.text = getString(R.string.severity_label_format, displayedSeverity)
 
         // State Classification & Color Mapping
         when {
@@ -379,7 +389,7 @@ class PlantResultFragment : Fragment() {
         binding.healthStatusIcon.text = "🌿"
         binding.healthStatusTitle.text = getString(R.string.foliage_healthy_title)
         binding.healthStatusTitle.setTextColor(greenColor)
-        binding.diseaseNameText.text = if (result.diseaseName.isNullOrBlank() || result.diseaseName.contains("None", true)) getString(R.string.healthy_foliage) else result.diseaseName
+        binding.diseaseNameText.text = getString(R.string.healthy_foliage)
         binding.diseaseNameText.setTextColor(android.graphics.Color.parseColor("#065F46"))
         binding.healthScorePercentText.setTextColor(greenColor)
         binding.healthScoreProgressBar.progressTintList = ColorStateList.valueOf(greenColor)
@@ -389,7 +399,9 @@ class PlantResultFragment : Fragment() {
         val amberColor = ContextCompat.getColor(requireContext(), R.color.warning)
         val amberBg = ContextCompat.getColor(requireContext(), R.color.warning_background)
 
-        val diseaseLabel = result.diseaseName?.takeIf { it.isNotBlank() && !it.contains("None", true) } ?: "Foliar Stress / Discoloration"
+        val diseaseLabel = result.diseaseName?.takeIf {
+            it.isNotBlank() && !it.contains("None", true) && !it.contains("Healthy", true) && !it.contains("No disease", true)
+        } ?: "Foliar Stress / Discoloration"
 
         binding.healthStatusCard.setCardBackgroundColor(amberBg)
         binding.healthStatusIcon.text = "⚠️"
@@ -405,7 +417,9 @@ class PlantResultFragment : Fragment() {
         val redColor = ContextCompat.getColor(requireContext(), R.color.error)
         val redBg = ContextCompat.getColor(requireContext(), R.color.error_background)
 
-        val diseaseLabel = result.diseaseName?.takeIf { it.isNotBlank() && !it.contains("None", true) } ?: "Active Fungal / Blight Disease"
+        val diseaseLabel = result.diseaseName?.takeIf {
+            it.isNotBlank() && !it.contains("None", true) && !it.contains("Healthy", true) && !it.contains("No disease", true)
+        } ?: "Active Fungal / Blight Disease"
 
         binding.healthStatusCard.setCardBackgroundColor(redBg)
         binding.healthStatusIcon.text = "🚨"

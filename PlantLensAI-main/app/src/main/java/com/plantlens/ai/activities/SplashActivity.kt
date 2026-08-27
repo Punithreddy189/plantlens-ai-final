@@ -19,10 +19,10 @@ class SplashActivity : AppCompatActivity() {
     lateinit var authRepository: AuthRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        com.plantlens.ai.utils.ThemeLocaleManager.init(this)
         super.onCreate(savedInstanceState)
         binding = ActivitySplashBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        com.plantlens.ai.utils.ThemeLocaleManager.init(this)
 
         // Show captivating splash screen for 2 seconds before routing
         Handler(Looper.getMainLooper()).postDelayed({

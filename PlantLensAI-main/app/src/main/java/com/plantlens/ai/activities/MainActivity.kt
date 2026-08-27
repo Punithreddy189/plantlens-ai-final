@@ -48,10 +48,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        com.plantlens.ai.utils.ThemeLocaleManager.init(this)
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        com.plantlens.ai.utils.ThemeLocaleManager.init(this)
 
         setupNavigation()
         handleIntent(intent)
