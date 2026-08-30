@@ -144,22 +144,6 @@ class PlantResultFragment : Fragment() {
         displayResults()
         setupListeners()
         observeViewModel()
-
-        val plant = matchedPlant
-        val isTrulyUnknown = (plant == null) || plant.name.equals("Not a plant", ignoreCase = true) || plant.name.equals("Unrecognized Plant", ignoreCase = true) || (plant.name.isBlank() && plant.scientificName.isBlank())
-        if (plant != null && !isTrulyUnknown) {
-            val diseaseName = arguments?.getString("disease_name") ?: "Healthy"
-            val pct = (confidenceScore * 100).toInt()
-            lifecycleScope.launch {
-                firebaseManager.autoSavePlantScan(
-                    plantName = plant.name,
-                    disease = diseaseName,
-                    confidence = pct,
-                    scientificName = plant.scientificName,
-                    plantId = plant.id
-                )
-            }
-        }
     }
 
     private fun <T : Serializable> Bundle.getSerializableCompat(key: String, clazz: Class<T>): T? {

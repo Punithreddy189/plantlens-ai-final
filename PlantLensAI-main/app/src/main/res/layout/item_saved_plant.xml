@@ -58,6 +58,15 @@
                     android:textSize="12sp"
                     android:layout_marginTop="2dp" />
 
+                <TextView
+                    android:id="@+id/savedPlantDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Saved: 30 Aug 2026, 09:05 PM"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="11sp"
+                    android:layout_marginTop="2dp" />
+
             </LinearLayout>
 
             <!-- Trash delete icon -->

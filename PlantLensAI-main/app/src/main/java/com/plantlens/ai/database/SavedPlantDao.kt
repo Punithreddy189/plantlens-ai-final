@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SavedPlantDao {
 
-    @Query("SELECT * FROM saved_plants ORDER BY addedDate DESC")
+    @Query("SELECT * FROM saved_plants ORDER BY CASE WHEN addedDate > 0 THEN addedDate ELSE createdAt END DESC")
     fun getAllSavedPlants(): Flow<List<SavedPlant>>
 
     @Query("SELECT * FROM saved_plants WHERE id = :id")

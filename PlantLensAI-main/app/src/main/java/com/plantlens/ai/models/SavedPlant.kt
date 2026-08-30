@@ -20,7 +20,7 @@ data class SavedPlant(
     var disease: String = "Healthy",
     var confidence: Int = 95,
     var isSaved: Boolean = true,
-    var addedDate: Long = 0L,
+    var addedDate: Long = System.currentTimeMillis(),
     var createdAt: Long = System.currentTimeMillis(),
     var lastWatered: Long = 0L,
     var nextWaterDate: Long = 0L,

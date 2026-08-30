@@ -55,6 +55,16 @@ class SavedPlantAdapter(
             val imageRes = com.plantlens.ai.utils.PlantImageMapper.getDrawableRes(savedPlant.plantName)
             binding.savedPlantThumbnail.setImageResource(imageRes)
 
+            // Format Saved Date (e.g. 30 Aug 2026, 09:05 PM)
+            val displayDate = if (savedPlant.addedDate > 0L) savedPlant.addedDate else savedPlant.createdAt
+            if (displayDate > 0L) {
+                val dateFormat = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
+                binding.savedPlantDate.text = "Saved: ${dateFormat.format(Date(displayDate))}"
+                binding.savedPlantDate.visibility = android.view.View.VISIBLE
+            } else {
+                binding.savedPlantDate.visibility = android.view.View.GONE
+            }
+
             // Format Last Watered time
             val now = System.currentTimeMillis()
             val lastWateredStr = if (savedPlant.lastWatered > 0L) {
