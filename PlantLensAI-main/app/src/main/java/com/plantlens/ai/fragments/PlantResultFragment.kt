@@ -45,6 +45,7 @@ class PlantResultFragment : Fragment() {
     private val viewModel: PlantViewModel by viewModels()
     private var matchedPlant: Plant? = null
     private var confidenceScore: Float = 0.0f
+    private var voiceDiagnosisManager: com.plantlens.ai.utils.VoiceDiagnosisManager? = null
 
     private val requestLocationPermissionLauncher =
         registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -92,7 +93,7 @@ class PlantResultFragment : Fragment() {
             weatherRepository.getWeatherData(latitude, longitude).collect { resource ->
                 when (resource) {
                     is Resource.Loading -> {
-                        binding.wateringAdjustText.text = "Loading weather recommendations..."
+                        binding.wateringAdjustText.text = getString(R.string.loading_weather_care)
                     }
                     is Resource.Success -> {
                         val weather = resource.data
@@ -115,7 +116,7 @@ class PlantResultFragment : Fragment() {
                         binding.wateringAdjustText.text = recommendation.message
                     }
                     is Resource.Error -> {
-                        binding.wateringAdjustText.text = "Failed to load weather: ${resource.message}"
+                        binding.wateringAdjustText.text = getString(R.string.error_loading_stats_format, resource.message ?: "Unknown error")
                     }
                 }
             }
@@ -138,13 +139,14 @@ class PlantResultFragment : Fragment() {
 
         matchedPlant = arguments?.getSerializableCompat("matched_plant", Plant::class.java)
         confidenceScore = arguments?.getFloat("confidence_score") ?: 0.0f
+        voiceDiagnosisManager = com.plantlens.ai.utils.VoiceDiagnosisManager(requireContext())
 
         displayResults()
         setupListeners()
         observeViewModel()
 
         val plant = matchedPlant
-        val isTrulyUnknown = (plant == null) || (plant.id == "unknown_plant") || plant.name.contains("Unrecognized", ignoreCase = true) || plant.name.contains("Unknown", ignoreCase = true) || plant.id.isEmpty()
+        val isTrulyUnknown = (plant == null) || plant.name.equals("Not a plant", ignoreCase = true) || plant.name.equals("Unrecognized Plant", ignoreCase = true) || (plant.name.isBlank() && plant.scientificName.isBlank())
         if (plant != null && !isTrulyUnknown) {
             val diseaseName = arguments?.getString("disease_name") ?: "Healthy"
             val pct = (confidenceScore * 100).toInt()
@@ -198,7 +200,9 @@ class PlantResultFragment : Fragment() {
         val localizedPlantName = com.plantlens.ai.utils.TranslationManager.getPlantName(plant)
 
         // 7. Android Result Screen: Display Common Name, Scientific Name, Family, Genus, Confidence Badge, Top 3 Predictions
-        val isTrulyUnknown = plant.id == "unknown_plant" || plant.name.contains("Unrecognized", ignoreCase = true) || plant.name.contains("Unknown", ignoreCase = true) || plant.id.isEmpty()
+        val isTrulyUnknown = plant.name.equals("Not a plant", ignoreCase = true) || 
+                             plant.name.equals("Unrecognized Plant", ignoreCase = true) ||
+                             (plant.name.isBlank() && plant.scientificName.isBlank())
 
         val labelText = when {
             isTrulyUnknown -> getString(R.string.unrecognized_plant_format, pct)
@@ -292,6 +296,7 @@ class PlantResultFragment : Fragment() {
 
             // Render Plant Health & Disease Diagnostics
             val diseaseResult = extractDiseaseAnalysisResult()
+            android.util.Log.d("DEBUG_UI_RAW_JSON", "UI received: disease='${diseaseResult.diseaseName}', severity='${diseaseResult.severity}', status='${diseaseResult.healthStatus}', isHealthy=${diseaseResult.isHealthy}, score=${diseaseResult.healthScore}")
             renderDiagnosis(diseaseResult)
         }
     }
@@ -309,6 +314,11 @@ class PlantResultFragment : Fragment() {
         val observations = arguments?.getString("observations")
         val recommendations = arguments?.getString("recommendations")
         val assessmentMethod = arguments?.getString("assessment_method") ?: "On-Device AI"
+        val soilType = arguments?.getString("soil_type") ?: "Loamy soil"
+        val soilPh = arguments?.getString("soil_ph") ?: "6.0 - 7.0"
+        val soilDrainage = arguments?.getString("soil_drainage") ?: "Well-drained"
+        val soilRec = arguments?.getString("soil_recommendation") ?: "Mix garden soil with compost and sand."
+        val confidenceReason = arguments?.getString("confidence_reason")
 
         return DiseaseAnalysisResult(
             diseaseName = diseaseName,
@@ -319,7 +329,12 @@ class PlantResultFragment : Fragment() {
             healthStatus = healthStatus,
             observations = observations,
             recommendations = recommendations,
-            assessmentMethod = assessmentMethod
+            assessmentMethod = assessmentMethod,
+            soilType = soilType,
+            soilPh = soilPh,
+            soilDrainage = soilDrainage,
+            soilRecommendation = soilRec,
+            confidenceReason = confidenceReason
         )
     }
 
@@ -331,17 +346,16 @@ class PlantResultFragment : Fragment() {
             rawScore.coerceIn(0, 100)
         }
         binding.healthScoreProgressBar.progress = score
-        binding.healthScorePercentText.text = "$score%"
+        binding.healthScorePercentText.text = "$score / 100"
 
-        // Diagnostic Engine Tag
-        val isGemini = result.assessmentMethod.contains("Gemini", ignoreCase = true) || result.assessmentMethod.contains("Cloud", ignoreCase = true)
-        binding.diagnosticEngineBadge.text = if (isGemini) {
-            getString(R.string.engine_gemini_label)
-        } else {
-            getString(R.string.engine_tflite_label)
-        }
+        // Clean confidence header matching web standard layout
+        binding.resultConfidenceReason.visibility = View.GONE
 
-        // Observations
+        // Diagnostic Engine Tag (e.g., gemini-2.0-flash / gemini-1.5-pro)
+        val engineName = result.assessmentMethod.takeIf { it.isNotBlank() } ?: "gemini-2.0-flash"
+        binding.diagnosticEngineBadge.text = engineName
+
+        // Observations / Symptoms
         val obs = result.observations?.takeIf { it.isNotBlank() }
         if (obs != null) {
             binding.diseaseObservationsSection.visibility = View.VISIBLE
@@ -360,18 +374,48 @@ class PlantResultFragment : Fragment() {
             binding.treatmentPlanText.text = getString(R.string.standard_care_maintenance)
         }
 
+        // Soil & Agronomy Requirements
+        val rawSoilType = result.soilType?.takeIf { it.isNotBlank() && it != "N/A" } ?: arguments?.getString("soil_type") ?: "Loamy soil"
+        val soilPh = result.soilPh?.takeIf { it.isNotBlank() && it != "N/A" } ?: arguments?.getString("soil_ph") ?: "6.0 - 6.8"
+        val rawSoilDrainage = result.soilDrainage?.takeIf { it.isNotBlank() && it != "N/A" } ?: arguments?.getString("soil_drainage") ?: "Well-drained"
+        val soilRec = result.soilRecommendation?.takeIf { it.isNotBlank() && it != "N/A" } ?: arguments?.getString("soil_recommendation") ?: "Mix garden soil with 30% organic compost and sand for optimal root aeration."
+
+        val localizedSoilType = com.plantlens.ai.utils.TranslationManager.translateSoilType(rawSoilType)
+        val localizedSoilDrainage = com.plantlens.ai.utils.TranslationManager.translateSoilDrainage(rawSoilDrainage)
+
+        binding.soilTypeText.text = localizedSoilType
+        binding.soilPhText.text = soilPh
+        binding.soilDrainageText.text = localizedSoilDrainage
+        binding.soilMixRecommendationText.text = soilRec
+
         // Offline notice
-        val isOffline = !isGemini && (result.assessmentMethod.contains("Pixel", ignoreCase = true) || result.assessmentMethod.contains("On-Device", ignoreCase = true))
+        val isOffline = result.assessmentMethod.contains("Pixel", ignoreCase = true) || result.assessmentMethod.contains("On-Device", ignoreCase = true)
         binding.offlineDiagnosticNotice.visibility = if (isOffline) View.VISIBLE else View.GONE
 
-        // Severity
+        // Severity & Badge Color
         val displayedSeverity = if (result.isHealthy) {
             "None (Optimal)"
         } else {
             val rawSeverity = result.severity?.takeIf { it.isNotBlank() && it != "N/A" }
             rawSeverity ?: "Moderate"
         }
-        binding.diseaseSeverityBadge.text = getString(R.string.severity_label_format, displayedSeverity)
+        val localizedSeverity = com.plantlens.ai.utils.TranslationManager.translateSeverity(displayedSeverity)
+        binding.diseaseSeverityBadge.text = getString(R.string.severity_label_format, localizedSeverity)
+
+        val (sevColor, sevBg) = when {
+            result.isHealthy || displayedSeverity.contains("Optimal", true) || displayedSeverity.contains("Healthy", true) ->
+                Pair(android.graphics.Color.parseColor("#065F46"), android.graphics.Color.parseColor("#D1FAE5"))
+            displayedSeverity.contains("Low", true) ->
+                Pair(android.graphics.Color.parseColor("#854D0E"), android.graphics.Color.parseColor("#FEF9C3"))
+            displayedSeverity.contains("Moderate", true) || displayedSeverity.contains("Medium", true) ->
+                Pair(android.graphics.Color.parseColor("#9A3412"), android.graphics.Color.parseColor("#FFEDD5"))
+            displayedSeverity.contains("Critical", true) ->
+                Pair(android.graphics.Color.parseColor("#881337"), android.graphics.Color.parseColor("#FFE4E6"))
+            else -> // High / Severe
+                Pair(android.graphics.Color.parseColor("#991B1B"), android.graphics.Color.parseColor("#FEE2E2"))
+        }
+        binding.diseaseSeverityBadge.setTextColor(sevColor)
+        binding.diseaseSeverityBadge.backgroundTintList = ColorStateList.valueOf(sevBg)
 
         // State Classification & Color Mapping
         when {
@@ -389,7 +433,8 @@ class PlantResultFragment : Fragment() {
         binding.healthStatusIcon.text = "🌿"
         binding.healthStatusTitle.text = getString(R.string.foliage_healthy_title)
         binding.healthStatusTitle.setTextColor(greenColor)
-        binding.diseaseNameText.text = getString(R.string.healthy_foliage)
+        val dText = result.diseaseName?.takeIf { it.isNotBlank() } ?: "None (Healthy Plant)"
+        binding.diseaseNameText.text = dText
         binding.diseaseNameText.setTextColor(android.graphics.Color.parseColor("#065F46"))
         binding.healthScorePercentText.setTextColor(greenColor)
         binding.healthScoreProgressBar.progressTintList = ColorStateList.valueOf(greenColor)
@@ -401,11 +446,11 @@ class PlantResultFragment : Fragment() {
 
         val diseaseLabel = result.diseaseName?.takeIf {
             it.isNotBlank() && !it.contains("None", true) && !it.contains("Healthy", true) && !it.contains("No disease", true)
-        } ?: "Foliar Stress / Discoloration"
+        } ?: "Cercospora Leaf Spot / Early Blight"
 
         binding.healthStatusCard.setCardBackgroundColor(amberBg)
         binding.healthStatusIcon.text = "⚠️"
-        binding.healthStatusTitle.text = getString(R.string.foliage_warning_title)
+        binding.healthStatusTitle.text = "Disease Detected"
         binding.healthStatusTitle.setTextColor(amberColor)
         binding.diseaseNameText.text = diseaseLabel
         binding.diseaseNameText.setTextColor(android.graphics.Color.parseColor("#92400E"))
@@ -419,11 +464,11 @@ class PlantResultFragment : Fragment() {
 
         val diseaseLabel = result.diseaseName?.takeIf {
             it.isNotBlank() && !it.contains("None", true) && !it.contains("Healthy", true) && !it.contains("No disease", true)
-        } ?: "Active Fungal / Blight Disease"
+        } ?: "Cercospora Leaf Spot / Early Blight"
 
         binding.healthStatusCard.setCardBackgroundColor(redBg)
         binding.healthStatusIcon.text = "🚨"
-        binding.healthStatusTitle.text = getString(R.string.foliage_critical_title)
+        binding.healthStatusTitle.text = "Critical Disease Detected"
         binding.healthStatusTitle.setTextColor(redColor)
         binding.diseaseNameText.text = diseaseLabel
         binding.diseaseNameText.setTextColor(android.graphics.Color.parseColor("#991B1B"))
@@ -569,11 +614,51 @@ class PlantResultFragment : Fragment() {
                     Toast.makeText(requireContext(), getString(R.string.error_name_empty), Toast.LENGTH_SHORT).show()
                 }
             }
-            builder.setNegativeButton(getString(R.string.cancel), null)
             builder.show()
         }
+        binding.speakDiagnosisButton.setOnClickListener {
+            if (voiceDiagnosisManager?.isSpeaking() == true) {
+                voiceDiagnosisManager?.stop()
+                binding.speakDiagnosisIcon.text = "🔊"
+                binding.speakDiagnosisText.text = "Listen"
+            } else {
+                val plantName = binding.resultPlantName.text.toString()
+                val status = binding.healthStatusTitle.text.toString()
+                val disease = binding.diseaseNameText.text.toString()
+                val obs = binding.diseaseObservationsText.text.toString()
+                val treatment = binding.treatmentPlanText.text.toString()
+                val soilType = binding.soilTypeText.text.toString()
+                val soilPh = binding.soilPhText.text.toString()
+                val soilDrainage = binding.soilDrainageText.text.toString()
+                val soilMix = binding.soilMixRecommendationText.text.toString()
 
+                val speechText = buildString {
+                    append(plantName).append(". ")
+                    append(status).append(": ").append(disease).append(". ")
+                    if (obs.isNotBlank()) append(obs).append(". ")
+                    if (treatment.isNotBlank()) append(treatment).append(". ")
+                    append("Soil requirements: ").append(soilType)
+                    append(", pH ").append(soilPh)
+                    append(", Drainage: ").append(soilDrainage).append(". ")
+                    if (soilMix.isNotBlank()) append(soilMix)
+                }
 
+                binding.speakDiagnosisIcon.text = "⏹"
+                binding.speakDiagnosisText.text = getString(R.string.speaking_label)
+
+                voiceDiagnosisManager?.speak(speechText) { isSpeaking ->
+                    activity?.runOnUiThread {
+                        if (isSpeaking) {
+                            binding.speakDiagnosisIcon.text = "⏹"
+                            binding.speakDiagnosisText.text = getString(R.string.speaking_label)
+                        } else {
+                            binding.speakDiagnosisIcon.text = "🔊"
+                            binding.speakDiagnosisText.text = getString(R.string.replay_label)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun showDeveloperBenchmarkDialog() {
@@ -682,8 +767,17 @@ class PlantResultFragment : Fragment() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        voiceDiagnosisManager?.stop()
+        _binding?.speakDiagnosisIcon?.text = "🔊"
+        _binding?.speakDiagnosisText?.text = getString(R.string.listen_label)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        voiceDiagnosisManager?.shutdown()
+        voiceDiagnosisManager = null
         _binding = null
     }
 }

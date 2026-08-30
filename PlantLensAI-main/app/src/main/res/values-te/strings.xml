@@ -264,4 +264,16 @@
     <string name="diagnosis_empty_message">ఈ స్కాన్ కోసం వ్యాధి నిర్ధారణ డేటా అందుబాటులో లేదు.</string>
     <string name="dialog_feedback_input_desc">దయచేసి ఇది ఏ మొక్కో మాకు తెలియజేయండి, తద్వారా మా డేటాబేస్ దీని నుండి నేర్చుకోవచ్చు.</string>
     <string name="dialog_feedback_input_hint">అసలు మొక్క పేరు</string>
+
+    <!-- Soil & Agronomy Strings -->
+    <string name="soil_guide_title">🌱 మట్టి &amp; వ్యవసాయ మార్గదర్శిని</string>
+    <string name="soil_type_label">🌍 రకం</string>
+    <string name="soil_ph_label">⚖️ pH స్థాయి</string>
+    <string name="soil_drainage_label">💧 నీటి పారుదల</string>
+
+    <!-- Voice TTS Playback Strings -->
+    <string name="listen_label">వినండి</string>
+    <string name="stop_label">ఆపండి</string>
+    <string name="speaking_label">మాట్లాడుతోంది...</string>
+    <string name="replay_label">మళ్ళీ వినండి</string>
 </resources>

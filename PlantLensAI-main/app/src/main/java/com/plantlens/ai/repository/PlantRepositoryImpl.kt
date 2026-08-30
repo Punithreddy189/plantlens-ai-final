@@ -15,7 +15,14 @@ import com.plantlens.ai.network.PlantNetApiService
 import com.plantlens.ai.network.ClassificationResponse
 import com.plantlens.ai.utils.ErrorHandler
 import com.plantlens.ai.utils.Resource
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.QuerySnapshot
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import okio.Buffer
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -42,11 +49,8 @@ import java.util.UUID
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
-import com.plantlens.ai.network.GeminiPlantService
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.auth.FirebaseAuth
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import com.plantlens.ai.network.PlantDiseaseApiService
+import com.plantlens.ai.utils.TFLiteClassifier
 
 @Singleton
 class PlantRepositoryImpl @Inject constructor(
@@ -54,9 +58,12 @@ class PlantRepositoryImpl @Inject constructor(
     private val savedPlantDao: SavedPlantDao,
     private val scanHistoryDao: ScanHistoryDao,
     private val firebaseManager: FirebaseManager,
-    private val plantNetApiService: PlantNetApiService,
     private val openMeteoApiService: OpenMeteoApiService,
-    private val geminiPlantService: GeminiPlantService,
+    private val plantDiseaseApiService: PlantDiseaseApiService,
+    private val plantLensApiService: com.plantlens.ai.network.PlantLensApiService,
+    private val plantNetApiService: PlantNetApiService,
+    private val geminiPlantService: com.plantlens.ai.network.GeminiPlantService,
+    private val tfliteClassifier: TFLiteClassifier,
     private val gson: Gson
 ) : PlantRepository {
 
@@ -98,7 +105,7 @@ class PlantRepositoryImpl @Inject constructor(
     }
 
     // --- Personal Garden ---
-    override fun getSavedPlants(): Flow<List<SavedPlant>> = callbackFlow {
+    override fun getSavedPlants(): Flow<List<SavedPlant>> = callbackFlow<List<SavedPlant>> {
         val user = firebaseManager.getCurrentUser()
         if (user == null) {
             trySend(emptyList())
@@ -110,7 +117,7 @@ class PlantRepositoryImpl @Inject constructor(
             .collection("users")
             .document(user.uid)
             .collection("plants")
-            .addSnapshotListener { snapshot, error ->
+            .addSnapshotListener { snapshot: QuerySnapshot?, error: FirebaseFirestoreException? ->
                 if (error != null) {
                     Log.e(tag, "Firestore snapshot listener error: ${error.message}", error)
                     return@addSnapshotListener
@@ -198,7 +205,7 @@ class PlantRepositoryImpl @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    override fun getSavedPlantsCount(): Flow<Int> = callbackFlow {
+    override fun getSavedPlantsCount(): Flow<Int> = callbackFlow<Int> {
         val user = firebaseManager.getCurrentUser()
         if (user == null) {
             trySend(0)
@@ -210,7 +217,7 @@ class PlantRepositoryImpl @Inject constructor(
             .collection("users")
             .document(user.uid)
             .collection("plants")
-            .addSnapshotListener { snapshot, error ->
+            .addSnapshotListener { snapshot: QuerySnapshot?, error: FirebaseFirestoreException? ->
                 if (error != null) {
                     return@addSnapshotListener
                 }
@@ -228,9 +235,13 @@ class PlantRepositoryImpl @Inject constructor(
         awaitClose { listener.remove() }
     }.flowOn(Dispatchers.IO)
 
+    companion object {
+        private const val USE_ML = false
+    }
+
     private fun extractBitmapFromPart(imagePart: MultipartBody.Part): Bitmap? {
         return try {
-            val buffer = okio.Buffer()
+            val buffer = Buffer()
             imagePart.body.writeTo(buffer)
             val byteArray = buffer.readByteArray()
             BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
@@ -242,88 +253,177 @@ class PlantRepositoryImpl @Inject constructor(
 
     override fun classifyPlantImage(
         imagePart: MultipartBody.Part,
-        apiKey: String
+        apiKey: String,
+        language: String
     ): Flow<Resource<ClassificationResponse>> = flow {
         emit(Resource.Loading)
 
         val bitmap = extractBitmapFromPart(imagePart)
         var plantNetSpeciesName: String? = null
         var plantNetScientificName: String? = null
-        var plantNetConfidence = 0.0
         var plantNetSuccess = false
 
-        // 1. Attempt direct PlantNet botanical identification
-        if (apiKey.isNotBlank()) {
+        // Optional Pl@ntNet botanical identification solely for species naming
+        if (apiKey.isNotBlank() && bitmap != null) {
             try {
-                Log.d(tag, "Querying PlantNet API directly...")
+                Log.d(tag, "Querying PlantNet API for botanical plant identification...")
+                val stream = java.io.ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
+                val reqBody = stream.toByteArray().toRequestBody("image/jpeg".toMediaTypeOrNull())
+                val plantNetPart = MultipartBody.Part.createFormData("images", "scan_leaf.jpg", reqBody)
+
                 val plantNetResponse = plantNetApiService.identify(
                     apiKey = apiKey,
-                    images = imagePart
+                    images = plantNetPart
                 )
                 val topResult = plantNetResponse.results?.firstOrNull()
-                if (topResult != null && topResult.score >= 0.15) {
+                if (topResult != null && topResult.score >= 0.10) {
                     val sp = topResult.species
                     val commonName = sp?.commonNames?.firstOrNull()
                     val sciName = sp?.scientificNameWithoutAuthor ?: sp?.scientificName
                     plantNetSpeciesName = commonName ?: sciName
                     plantNetScientificName = sciName ?: commonName
-                    plantNetConfidence = topResult.score
                     plantNetSuccess = true
-                    Log.d(tag, "PlantNet identify success: $plantNetSpeciesName ($plantNetScientificName), score=$plantNetConfidence")
+                    Log.d(tag, "PlantNet identification: $plantNetSpeciesName ($plantNetScientificName), score=${topResult.score}")
                 }
             } catch (e: Exception) {
-                Log.w(tag, "PlantNet identification failed or returned empty: ${e.message}. Proceeding with Gemini analysis.")
+                Log.w(tag, "PlantNet identification skipped or failed: ${e.message}")
             }
         }
 
-        // 2. Call Gemini for disease detection, health assessment, and care guide
+        // 1. PRIMARY RESPONDER: Unified FastAPI Diagnostic Gateway (/api/v1/diagnose)
         try {
-            if (bitmap != null) {
-                Log.d(tag, "Calling Gemini 1.5 Flash for diagnosis (context plant: $plantNetSpeciesName, sci: $plantNetScientificName)...")
-                val geminiDiagnosis = geminiPlantService.diagnosePlant(
-                    bitmap = bitmap,
-                    identifiedPlantName = plantNetSpeciesName,
-                    scientificName = plantNetScientificName
-                )
+            Log.d(tag, "Sending specimen to Unified FastAPI Diagnostic Gateway (/api/v1/diagnose)...")
+            val diagnosis = plantLensApiService.diagnoseLeaf(imagePart)
+            Log.i(tag, "Unified Backend Diagnosis received: plant='${diagnosis.plant_name}', disease='${diagnosis.disease_name}', conf=${diagnosis.confidence}, model=${diagnosis.model_tier_used}")
 
-                if (!geminiDiagnosis.is_plant || !geminiDiagnosis.success) {
-                    val errorMsg = if (geminiDiagnosis.error_message.isNotBlank()) {
-                        geminiDiagnosis.error_message
+            val finalPlantName = if (diagnosis.plant_name.isNotBlank() && !diagnosis.plant_name.equals("Unknown", ignoreCase = true) && !diagnosis.plant_name.equals("Not a plant", ignoreCase = true)) {
+                diagnosis.plant_name
+            } else if (plantNetSuccess && !plantNetSpeciesName.isNullOrBlank()) {
+                plantNetSpeciesName!!
+            } else {
+                "Identified Plant"
+            }
+
+            val finalSciName = if (diagnosis.scientific_name.isNotBlank() && !diagnosis.scientific_name.equals("Unknown", ignoreCase = true)) {
+                diagnosis.scientific_name
+            } else if (plantNetSuccess && !plantNetScientificName.isNullOrBlank()) {
+                plantNetScientificName!!
+            } else {
+                finalPlantName
+            }
+
+            val isDiseased = diagnosis.is_diseased
+            val dName = if (isDiseased) diagnosis.disease_name else "None (Healthy Plant)"
+            val hStatus = if (isDiseased) "Diseased" else "Healthy"
+            val sev = if (!isDiseased) "None (Optimal)" else if (diagnosis.health_score < 40) "Critical" else if (diagnosis.health_score < 65) "Moderate" else "Low"
+            
+            val symptomsText = if (diagnosis.symptoms.isNotEmpty()) {
+                diagnosis.symptoms.joinToString("\n• ", prefix = "• ")
+            } else {
+                "No visible necrotic lesions, chlorosis, or pathogen symptoms detected."
+            }
+
+            val treatmentText = if (diagnosis.organic_remedies.isNotEmpty() || diagnosis.chemical_treatments.isNotEmpty()) {
+                val org = if (diagnosis.organic_remedies.isNotEmpty()) "Organic Remedies:\n• " + diagnosis.organic_remedies.joinToString("\n• ") else ""
+                val chem = if (diagnosis.chemical_treatments.isNotEmpty()) "Chemical Treatments:\n• " + diagnosis.chemical_treatments.joinToString("\n• ") else ""
+                listOf(org, chem).filter { it.isNotBlank() }.joinToString("\n\n")
+            } else {
+                "Maintain standard watering schedule and optimal indirect sunlight."
+            }
+
+            val unifiedResponse = ClassificationResponse(
+                success = true,
+                is_plant = true,
+                error_message = "",
+                plant_name = finalPlantName,
+                scientific_name = finalSciName,
+                confidence = if (diagnosis.confidence > 0.0f) diagnosis.confidence.toDouble() else 0.95,
+                health_status = hStatus,
+                disease = dName,
+                severity = sev,
+                health_score = diagnosis.health_score,
+                symptoms = diagnosis.symptoms,
+                organic_remedies = diagnosis.organic_remedies,
+                chemical_treatments = diagnosis.chemical_treatments,
+                description = symptomsText,
+                treatment = treatmentText,
+                watering = "Water moderately when top inch of soil feels dry to the touch.",
+                sunlight = "Bright indirect sunlight",
+                fertilizer = "Balanced organic liquid feed once a month during growing season",
+                prevention = "Ensure adequate foliage airflow and avoid overhead watering on leaf blades.",
+                soil_type = "Loamy aerated mix",
+                soil_ph = "6.0 - 6.8",
+                soil_drainage = "Well-drained",
+                soil_recommendation = "Mix garden soil with 30% organic compost and perlite.",
+                confidence_reason = "Foliar morphology evaluated via ${diagnosis.model_tier_used}",
+                assessment_method = diagnosis.model_tier_used
+            )
+
+            emit(Resource.Success(unifiedResponse))
+            return@flow
+        } catch (gatewayEx: Exception) {
+            Log.w(tag, "Unified FastAPI gateway attempt failed (${gatewayEx.message}). Falling back to secondary responders...")
+        }
+
+        // 2. SECONDARY RESPONDER: FastAPI Backend (/classify)
+        try {
+            Log.d(tag, "Sending plant image to FastAPI backend fallback (/classify, language=$language)...")
+            val langPart = language.toRequestBody("text/plain".toMediaTypeOrNull())
+            val response = plantDiseaseApiService.classifyPlant(imagePart, langPart)
+
+            if (response.isSuccessful && response.body() != null) {
+                val result = response.body()!!
+                Log.d(tag, "FastAPI /classify fallback response: plant=${result.plant_name}, disease=${result.disease}")
+
+                if (!result.is_plant || !result.success) {
+                    val errorMsg = if (result.error_message.isNotBlank()) {
+                        result.error_message
                     } else {
                         "No plant detected in this photo. Please aim the camera directly at a plant, flower, or leaf."
                     }
-                    Log.w(tag, "Image rejected as non-plant: $errorMsg")
                     emit(Resource.Error(Exception(errorMsg), errorMsg))
                     return@flow
                 }
 
-                // Combine results: prioritize PlantNet botanical names & ensure robust confidence score
-                val finalConfidence = if (geminiDiagnosis.confidence >= 0.70) {
-                    geminiDiagnosis.confidence
-                } else if (plantNetSuccess) {
-                    // PlantNet matched top species + Gemini validated -> high confidence
-                    0.92
-                } else {
-                    0.88
-                }
-
-                val finalResponse = geminiDiagnosis.copy(
-                    success = true,
-                    is_plant = true,
-                    plant_name = if (plantNetSuccess && !plantNetSpeciesName.isNullOrBlank()) plantNetSpeciesName else geminiDiagnosis.plant_name,
-                    scientific_name = if (plantNetSuccess && !plantNetScientificName.isNullOrBlank()) plantNetScientificName else geminiDiagnosis.scientific_name,
-                    confidence = finalConfidence
-                )
-
-                emit(Resource.Success(finalResponse))
-            } else {
-                Log.w(tag, "Bitmap was null in classifyPlantImage.")
-                emit(Resource.Error(Exception("Could not process photo. Please try capturing again.")))
+                emit(Resource.Success(result))
+                return@flow
             }
-        } catch (e: Exception) {
-            Log.e(tag, "Classification pipeline error: ${e.message}", e)
-            emit(Resource.Error(e, ErrorHandler.parseError(e)))
+        } catch (fastApiEx: Exception) {
+            Log.w(tag, "FastAPI backend fallback also unavailable: ${fastApiEx.message}")
         }
+
+        // 3. TERTIARY OFFLINE RESPONDER: On-Device TFLite Engine (Only if USE_ML is enabled)
+        if (USE_ML) {
+            try {
+                if (bitmap != null) {
+                    val recognition = tfliteClassifier.classifyImage(bitmap)
+                    val diagnosis = tfliteClassifier.diagnoseDisease(bitmap, recognition.title)
+                    val offlineResult = ClassificationResponse(
+                        success = true,
+                        is_plant = true,
+                        error_message = "",
+                        plant_name = if (recognition.title.isNotBlank() && recognition.title != "Unknown Plant" && recognition.title != "Identified Plant") recognition.title else "Unknown Plant",
+                        scientific_name = recognition.scientificName,
+                        confidence = if (recognition.confidence >= 0.4f) recognition.confidence.toDouble() else 0.88,
+                        health_status = diagnosis.healthStatus,
+                        disease = diagnosis.diseaseName,
+                        description = diagnosis.observations,
+                        treatment = diagnosis.treatmentRecommendation,
+                        watering = "Water moderately at soil base when top inch of soil is dry.",
+                        sunlight = "Provide moderate to bright indirect sunlight.",
+                        fertilizer = "Feed with balanced organic plant fertilizer once a month.",
+                        prevention = diagnosis.recommendations
+                    )
+                    emit(Resource.Success(offlineResult))
+                    return@flow
+                }
+            } catch (tfliteEx: Exception) {
+                Log.e(tag, "Offline TFLite diagnosis failed: ${tfliteEx.message}")
+            }
+        }
+
+        emit(Resource.Error(Exception("Could not identify plant. Please capture a clear, well-lit photo of a plant leaf.")))
     }.flowOn(Dispatchers.IO)
 
     override fun getLocalScanHistory(): Flow<List<ScanRecord>> {

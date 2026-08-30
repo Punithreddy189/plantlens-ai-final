@@ -16,12 +16,23 @@ data class ClassificationResponse(
     val confidence: Double = 0.0,
     val health_status: String = "",
     val disease: String = "",
+    val severity: String = "Low",
+    val health_score: Int = 100,
+    val symptoms: List<String> = emptyList(),
+    val organic_remedies: List<String> = emptyList(),
+    val chemical_treatments: List<String> = emptyList(),
     val description: String = "",
     val treatment: String = "",
     val watering: String = "",
     val sunlight: String = "",
     val fertilizer: String = "",
-    val prevention: String = ""
+    val prevention: String = "",
+    val soil_type: String = "Loamy soil",
+    val soil_ph: String = "6.0 - 7.0",
+    val soil_drainage: String = "Well-drained",
+    val soil_recommendation: String = "Mix garden soil with organic compost.",
+    val confidence_reason: String = "",
+    val assessment_method: String = "gemini-2.0-flash"
 ) : Serializable
 
 data class PlantNetIdentifyResponse(

@@ -25,6 +25,10 @@ export const SAMPLE_PLANTS = [
     humidity: '50% - 70%',
     fertilizer: 'Balanced 10-10-10 organic liquid fertilizer every 2 weeks during fruiting.',
     harvestTime: '60 - 80 days post planting',
+    soilType: 'Rich, fertile loamy garden soil',
+    soilPh: '6.0 - 6.8 (Slightly Acidic)',
+    soilDrainage: 'Well-drained & moisture-retentive',
+    soilRecommendation: '• 40% Rich garden topsoil\n• 40% Aged organic compost or manure\n• 20% Perlite or coarse sand\n• Add 1 tbsp crushed eggshells or lime for calcium to prevent blossom end rot',
     preventionTips: ['Ensure wide spacing between plants for air circulation.', 'Water exclusively at the base using drip irrigation.', 'Rotate tomato crops every 3 years.']
   },
   {
@@ -51,6 +55,10 @@ export const SAMPLE_PLANTS = [
     humidity: '60% - 80%',
     fertilizer: 'Diluted nitrogen-rich liquid houseplant food once per month in spring/summer.',
     harvestTime: 'Ornamental Indoor Perennial',
+    soilType: 'Chunky aerated Aroid potting blend',
+    soilPh: '5.5 - 6.8 (Mildly Acidic)',
+    soilDrainage: 'High aeration & free-draining',
+    soilRecommendation: '• 40% Chunky pine/orchid bark or coconut husk chips\n• 30% Peat moss or coco coir\n• 20% Coarse perlite or pumice\n• 10% Organic worm castings for gentle nutrition',
     preventionTips: ['Avoid direct harsh midday sunlight to prevent scorching.', 'Ensure pot has adequate drainage holes.']
   },
   {
@@ -77,6 +85,10 @@ export const SAMPLE_PLANTS = [
     humidity: '55% - 75%',
     fertilizer: 'Rose-specific 12-15-10 granular fertilizer in early spring and mid-summer.',
     harvestTime: 'Blooms throughout spring to autumn',
+    soilType: 'Deep, nutrient-rich clay loam',
+    soilPh: '6.2 - 6.8 (Slightly Acidic)',
+    soilDrainage: 'Good drainage without waterlogging',
+    soilRecommendation: '• 50% Garden loam soil\n• 30% Well-rotted compost or leaf mold\n• 20% Coarse builder sand\n• Mix in bone meal for strong root anchoring',
     preventionTips: ['Prune rose center to allow sunlight penetration.', 'Never sprinkle leaves in late evening.']
   },
   {
@@ -103,6 +115,10 @@ export const SAMPLE_PLANTS = [
     humidity: '40% - 60%',
     fertilizer: 'Light organic fish emulsion fertilizer every 3 weeks.',
     harvestTime: 'Continuous leaf harvest',
+    soilType: 'Fertile, loose, well-aerated loam',
+    soilPh: '6.0 - 7.0 (Neutral to Mildly Acidic)',
+    soilDrainage: 'Well-drained & light',
+    soilRecommendation: '• 50% Quality potting soil\n• 30% Organic compost\n• 20% Perlite or vermiculite for root aeration\n• Avoid overly compacted dense clay',
     preventionTips: ['Plant downy-mildew resistant basil varieties.', 'Keep pots under covered porch during heavy rain.']
   }
 ];
@@ -110,7 +126,7 @@ export const SAMPLE_PLANTS = [
 export const CARE_TIPS = [
   { icon: '☀️', title: 'Sunlight Management', text: 'Most flowering plants need 6+ hours of sunlight, while foliage plants prefer bright indirect light.' },
   { icon: '💧', title: 'Watering Rule', text: 'Always check topsoil moisture with your finger before watering. Overwatering causes root rot.' },
-  { icon: '🌱', title: 'Soil Ventilation', text: 'Gently loosen topsoil every 3 weeks to allow oxygen flow to root structures.' },
+  { icon: '🌱', title: 'Soil Aeration & pH', text: 'Gently loosen topsoil every 3 weeks to prevent compaction. Aim for a slightly acidic 6.0-6.8 pH for optimal nutrient absorption.' },
   { icon: '✂️', title: 'Pruning Magic', text: 'Remove yellowing or damaged leaves promptly to redirect energy to healthy new growth.' }
 ];
 

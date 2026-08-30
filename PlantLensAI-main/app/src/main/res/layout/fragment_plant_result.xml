@@ -13,27 +13,47 @@
         android:padding="20dp">
 
         <!-- Confetti/Match badge -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/matchBadge"
-            android:layout_width="wrap_content"
+        <!-- Confidence Badge & AI Reasoning -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="8dp"
-            app:cardCornerRadius="20dp"
-            app:strokeWidth="0dp"
-            app:cardBackgroundColor="@color/accent_light">
-            
-            <TextView
-                android:id="@+id/confidenceScoreText"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/matchBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="98% Match Confidence"
-                android:textColor="@color/primary"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                android:paddingHorizontal="16dp"
-                android:paddingVertical="8dp"/>
-        </com.google.android.material.card.MaterialCardView>
+                app:cardCornerRadius="20dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="@color/accent_light">
+                
+                <TextView
+                    android:id="@+id/confidenceScoreText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="98% Match Confidence"
+                    android:textColor="@color/primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="8dp"/>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/resultConfidenceReason"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Clear foliar morphology observed."
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:visibility="gone"
+                android:paddingHorizontal="16dp"/>
+        </LinearLayout>
 
         <!-- Main Plant Details Card -->
         <com.google.android.material.card.MaterialCardView
@@ -388,7 +408,7 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Header with Title & Engine Tag -->
+                    <!-- Header with Title, Voice TTS & Engine Tag -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -404,6 +424,45 @@
                             android:textColor="@color/primary"
                             android:textSize="15sp"
                             android:textStyle="bold"/>
+
+                        <!-- Voice Readout TTS Button -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/speakDiagnosisButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            app:cardCornerRadius="16dp"
+                            app:strokeWidth="0dp"
+                            app:cardBackgroundColor="@color/accent_light"
+                            android:clickable="true"
+                            android:focusable="true">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:paddingHorizontal="10dp"
+                                android:paddingVertical="4dp">
+
+                                <TextView
+                                    android:id="@+id/speakDiagnosisIcon"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="🔊"
+                                    android:textSize="13sp"/>
+
+                                <TextView
+                                    android:id="@+id/speakDiagnosisText"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/listen_label"
+                                    android:textColor="@color/primary"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:layout_marginStart="4dp"/>
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
 
                         <TextView
                             android:id="@+id/diagnosticEngineBadge"
@@ -568,6 +627,128 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/standard_care_maintenance"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="12sp"
+                                android:lineSpacingMultiplier="1.2"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Soil & Agronomy Recommendation Section -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/soilRecommendationCard"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        app:cardCornerRadius="10dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="?attr/colorOutline"
+                        app:cardBackgroundColor="?attr/colorSurface">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/soil_guide_title"
+                                android:textColor="@color/primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:layout_marginBottom="6dp"/>
+
+                            <!-- Soil Attributes Row -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:baselineAligned="false">
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/soil_type_label"
+                                        android:textColor="?attr/colorOnSurfaceVariant"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold"/>
+                                    <TextView
+                                        android:id="@+id/soilTypeText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Loamy soil"
+                                        android:textColor="?attr/colorOnSurface"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:layout_marginTop="2dp"/>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/soil_ph_label"
+                                        android:textColor="?attr/colorOnSurfaceVariant"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold"/>
+                                    <TextView
+                                        android:id="@+id/soilPhText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="6.0 - 6.8"
+                                        android:textColor="?attr/colorOnSurface"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:layout_marginTop="2dp"/>
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/soil_drainage_label"
+                                        android:textColor="?attr/colorOnSurfaceVariant"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold"/>
+                                    <TextView
+                                        android:id="@+id/soilDrainageText"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Well-drained"
+                                        android:textColor="?attr/colorOnSurface"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:layout_marginTop="2dp"/>
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:background="?attr/colorOutline"
+                                android:layout_marginVertical="6dp"/>
+
+                            <!-- Soil Mix Advice -->
+                            <TextView
+                                android:id="@+id/soilMixRecommendationText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Mix garden soil with 30% organic compost and sand for optimal root aeration."
                                 android:textColor="?attr/colorOnSurface"
                                 android:textSize="12sp"
                                 android:lineSpacingMultiplier="1.2"/>

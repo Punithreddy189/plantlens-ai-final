@@ -264,4 +264,16 @@
     <string name="diagnosis_empty_message">No disease diagnostic data available for this scan.</string>
     <string name="dialog_feedback_input_desc">Please tell us what plant it is so our database can learn from it.</string>
     <string name="dialog_feedback_input_hint">Actual Plant Name</string>
+
+    <!-- Soil & Agronomy Strings -->
+    <string name="soil_guide_title">🌱 Soil &amp; Agronomy Guide</string>
+    <string name="soil_type_label">🌍 Type</string>
+    <string name="soil_ph_label">⚖️ pH Level</string>
+    <string name="soil_drainage_label">💧 Drainage</string>
+
+    <!-- Voice TTS Playback Strings -->
+    <string name="listen_label">Listen</string>
+    <string name="stop_label">Stop</string>
+    <string name="speaking_label">Speaking...</string>
+    <string name="replay_label">Replay</string>
 </resources>

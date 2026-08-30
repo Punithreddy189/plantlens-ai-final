@@ -5,6 +5,7 @@ import { WeatherWidget } from './weather.js';
 import { showToast, escapeHTML, debounce } from './utils.js';
 import { auth } from './firebase.js';
 import { onAuthStateChanged } from 'firebase/auth';
+import { normalizeSoil, getPhClassification } from './scanner.js';
 
 export function getPlantImageUrl(plant) {
   if (plant) {
@@ -312,9 +313,11 @@ export const GardenModule = {
     const plantName = plant.name || plant.plantName || "Plant";
     const isHealthy = plant.healthStatus === 'healthy' || (plant.disease && plant.disease.toLowerCase().includes('healthy'));
     const plantImg = getPlantImageUrl(plant);
+    const soilData = normalizeSoil(plant, plantName, false);
+    const phInfo = getPhClassification(soilData.soilPh);
 
     content.innerHTML = `
-      <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px;">
+      <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
         <img src="${plantImg}" onerror="this.onerror=null; this.src='${getPlantImageUrl({ name: plantName, healthStatus: isHealthy ? 'healthy' : 'diseased' })}';" alt="${escapeHTML(plantName)}" style="width: 100px; height: 100px; border-radius: var(--radius-md); object-fit: cover;"/>
         <div>
           <h3>${escapeHTML(plantName)}</h3>
@@ -325,10 +328,39 @@ export const GardenModule = {
         </div>
       </div>
 
-      <div style="margin-bottom: 20px; background: var(--surface-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <div style="margin-bottom: 18px; background: var(--surface-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
         <h4 style="color: var(--primary-color); margin-bottom: 8px;">Diagnosis & Health Condition</h4>
         <p><strong>Condition:</strong> ${escapeHTML(plant.diseaseName || plant.disease || 'Healthy Plant')}</p>
         <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">${escapeHTML(plant.description || (isHealthy ? 'Optimal leaf health. No fungal or bacterial infections detected.' : 'Identified symptoms requiring treatment and watering adjustments.'))}</p>
+      </div>
+
+      <!-- Soil & Agronomy Recommendation Section -->
+      <div style="margin-bottom: 18px; background: var(--surface-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <h4 style="color: var(--primary-color); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+          <span>🌱</span> Soil & Agronomy Recommendation
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 12px;">
+          <div style="background: var(--bg-color); padding: 10px; border-radius: var(--radius-sm); text-align: center;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Soil Type</div>
+            <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-top: 2px;">${escapeHTML(soilData.soilType)}</div>
+          </div>
+          <div style="background: var(--bg-color); padding: 10px; border-radius: var(--radius-sm); text-align: center;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Ideal pH</div>
+            <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-top: 2px;">
+              ${escapeHTML(soilData.soilPh)} <span class="ph-badge ${phInfo.class}" style="font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; display: inline-block;">${phInfo.label.split(' ')[0]}</span>
+            </div>
+          </div>
+          <div style="background: var(--bg-color); padding: 10px; border-radius: var(--radius-sm); text-align: center;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Drainage</div>
+            <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary); margin-top: 2px;">${escapeHTML(soilData.soilDrainage)}</div>
+          </div>
+        </div>
+        ${soilData.soilRecommendation ? `
+          <div style="background: rgba(46, 125, 50, 0.05); border: 1px dashed var(--primary-color); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6;">
+            <strong style="color: var(--primary-color);">🥣 Substrate Mix:</strong><br>
+            ${soilData.soilRecommendation.split('\n').filter(l => l.trim()).map(l => `<div>${escapeHTML(l.startsWith('•') ? l : '• ' + l)}</div>`).join('')}
+          </div>
+        ` : ''}
       </div>
 
       <div style="margin-bottom: 20px;">

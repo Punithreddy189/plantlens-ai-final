@@ -264,4 +264,16 @@
     <string name="diagnosis_empty_message">इस स्कैन के लिए कोई रोग निदान डेटा उपलब्ध नहीं है।</string>
     <string name="dialog_feedback_input_desc">कृपया हमें बताएं कि यह कौन सा पौधा है ताकि हमारा डेटाबेस इससे सीख सके।</string>
     <string name="dialog_feedback_input_hint">वास्तविक पौधे का नाम</string>
+
+    <!-- Soil & Agronomy Strings -->
+    <string name="soil_guide_title">🌱 मिट्टी और कृषि मार्गदर्शन</string>
+    <string name="soil_type_label">🌍 प्रकार</string>
+    <string name="soil_ph_label">⚖️ pH स्तर</string>
+    <string name="soil_drainage_label">💧 जल निकासी</string>
+
+    <!-- Voice TTS Playback Strings -->
+    <string name="listen_label">सुनें</string>
+    <string name="stop_label">रोकें</string>
+    <string name="speaking_label">बोल रहा है...</string>
+    <string name="replay_label">पुनः सुनें</string>
 </resources>

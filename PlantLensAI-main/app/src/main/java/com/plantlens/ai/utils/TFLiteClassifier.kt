@@ -11,6 +11,8 @@ import java.io.InputStreamReader
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
+import kotlin.math.pow
+import kotlin.math.abs
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -239,12 +241,12 @@ class TFLiteClassifier @Inject constructor() {
         val greenCoverage = greenCount.toFloat() / totalPixels
 
         val avgGray = grayList.average()
-        val variance = grayList.map { Math.pow(it - avgGray, 2.0) }.sum() / totalPixels
+        val variance = grayList.map { (it - avgGray).pow(2.0) }.sum() / totalPixels
         val textureScore = (variance / 80.0f).coerceIn(0.0, 100.0).toFloat()
 
         var edgeDiffs = 0
         for (i in 0 until grayList.size - 1) {
-            if (Math.abs(grayList[i] - grayList[i + 1]) > 22.0) {
+            if (abs(grayList[i] - grayList[i + 1]) > 22.0) {
                 edgeDiffs++
             }
         }
@@ -254,7 +256,7 @@ class TFLiteClassifier @Inject constructor() {
         val totalArea = width * height
         val bboxCoverage = cropArea.toFloat() / totalArea
 
-        val brightnessBias = Math.abs(avgGray - 128.0)
+        val brightnessBias = abs(avgGray - 128.0)
         val qualityScore = (100.0f - (brightnessBias * 0.6f).toFloat()).coerceIn(0f, 100f)
 
         val compositeScore = (
@@ -723,8 +725,8 @@ class TFLiteClassifier @Inject constructor() {
                     ==========================================================
                 """.trimIndent())
 
-                // 1. Species Confidence Validation: Confidence < 55% -> Unknown Plant
-                if (topPrediction.confidence < 0.55f) {
+                // 1. Species Confidence Validation: Confidence < 25% -> Unknown Plant
+                if (topPrediction.confidence < 0.25f) {
                     return Recognition(
                         id = "unknown_plant",
                         title = "Unknown Plant",

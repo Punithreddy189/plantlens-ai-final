@@ -264,4 +264,16 @@
     <string name="diagnosis_empty_message">இந்த ஸ்கேனுக்கு நோய் கண்டறிதல் தரவு கிடைக்கவில்லை.</string>
     <string name="dialog_feedback_input_desc">இது எந்த தாவரம் என்று எங்களுக்குத் தெரிவிக்கவும், இதனால் எங்கள் தரவுத்தளம் இதிலிருந்து கற்றுக்கொள்ள முடியும்.</string>
     <string name="dialog_feedback_input_hint">உண்மையான தாவர பெயர்</string>
+
+    <!-- Soil & Agronomy Strings -->
+    <string name="soil_guide_title">🌱 மண் மற்றும் விவசாய வழிகாட்டி</string>
+    <string name="soil_type_label">🌍 வகை</string>
+    <string name="soil_ph_label">⚖️ pH அளவு</string>
+    <string name="soil_drainage_label">💧 வடிகால்</string>
+
+    <!-- Voice TTS Playback Strings -->
+    <string name="listen_label">கேளுங்கள்</string>
+    <string name="stop_label">நிறுத்து</string>
+    <string name="speaking_label">பேசுகிறது...</string>
+    <string name="replay_label">மீண்டும் கேள்</string>
 </resources>

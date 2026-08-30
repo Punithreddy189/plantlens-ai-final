@@ -67,6 +67,11 @@ export const StorageManager = {
                              (d.plantImage && String(d.plantImage).trim() !== '') ? d.plantImage :
                              (localMatch && localMatch.image) ? localMatch.image : '';
 
+        const soilType = d.soilType || d.soil_type || (localMatch ? (localMatch.soilType || localMatch.soil_type) : '') || 'Loamy soil';
+        const soilPh = d.soilPh || d.soil_ph || (localMatch ? (localMatch.soilPh || localMatch.soil_ph) : '') || '6.0 - 6.8';
+        const soilDrainage = d.soilDrainage || d.soil_drainage || (localMatch ? (localMatch.soilDrainage || localMatch.soil_drainage) : '') || 'Well-drained';
+        const soilRecommendation = d.soilRecommendation || d.soil_recommendation || (localMatch ? (localMatch.soilRecommendation || localMatch.soil_recommendation) : '') || '';
+
         firestoreGarden.push({
           ...d,
           name: d.plantName || d.name || "Plant",
@@ -75,6 +80,14 @@ export const StorageManager = {
           healthStatus: d.healthStatus || (d.disease && String(d.disease).toLowerCase().includes('healthy') ? 'healthy' : 'diseased'),
           image: resolvedImage,
           imageUrl: resolvedImage,
+          soilType,
+          soil_type: soilType,
+          soilPh,
+          soil_ph: soilPh,
+          soilDrainage,
+          soil_drainage: soilDrainage,
+          soilRecommendation,
+          soil_recommendation: soilRecommendation,
           firebaseDocId: docId,
           id: docId
         });
@@ -104,6 +117,11 @@ export const StorageManager = {
     const garden = this.getGarden();
     const rawImage = plantObject.image || plantObject.imageUrl || plantObject.image_url || '';
 
+    const resolvedSoilType = plantObject.soilType || plantObject.soil_type || 'Loamy soil';
+    const resolvedSoilPh = plantObject.soilPh || plantObject.soil_ph || '6.0 - 6.8';
+    const resolvedSoilDrainage = plantObject.soilDrainage || plantObject.soil_drainage || 'Well-drained';
+    const resolvedSoilRec = plantObject.soilRecommendation || plantObject.soil_recommendation || '';
+
     const newEntry = {
       ...plantObject,
       name: plantObject.name || plantObject.plantName || 'Plant',
@@ -111,6 +129,14 @@ export const StorageManager = {
       diseaseName: plantObject.diseaseName || plantObject.disease || 'Healthy Plant',
       image: rawImage,
       imageUrl: rawImage,
+      soilType: resolvedSoilType,
+      soil_type: resolvedSoilType,
+      soilPh: resolvedSoilPh,
+      soil_ph: resolvedSoilPh,
+      soilDrainage: resolvedSoilDrainage,
+      soil_drainage: resolvedSoilDrainage,
+      soilRecommendation: resolvedSoilRec,
+      soil_recommendation: resolvedSoilRec,
       uid: user ? user.uid : 'guest',
       id: 'plant-' + Date.now(),
       addedDate: new Date().toISOString().split('T')[0],
@@ -157,6 +183,14 @@ export const StorageManager = {
           imageUrl: firestoreImage || '',
           waterSchedule: newEntry.waterSchedule || 'Every 2-3 days',
           category: newEntry.category || 'Indoor',
+          soilType: resolvedSoilType,
+          soil_type: resolvedSoilType,
+          soilPh: resolvedSoilPh,
+          soil_ph: resolvedSoilPh,
+          soilDrainage: resolvedSoilDrainage,
+          soil_drainage: resolvedSoilDrainage,
+          soilRecommendation: resolvedSoilRec,
+          soil_recommendation: resolvedSoilRec,
           createdAt: new Date().toISOString()
         });
         newEntry.firebaseDocId = docRef.id;

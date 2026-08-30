@@ -15,7 +15,8 @@ interface PlantRepository {
     fun getPlantById(id: String): Flow<Resource<Plant>>
     fun classifyPlantImage(
         imagePart: MultipartBody.Part,
-        apiKey: String
+        apiKey: String,
+        language: String = "English"
     ): Flow<Resource<ClassificationResponse>>
 
     // Local Scan Cache history

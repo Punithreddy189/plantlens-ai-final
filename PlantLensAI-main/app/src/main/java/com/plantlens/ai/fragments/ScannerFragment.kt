@@ -166,6 +166,48 @@ class ScannerFragment : Fragment() {
         }
     }
 
+    private fun rotateBitmapIfRequired(bitmap: Bitmap, path: String): Bitmap {
+        return try {
+            val exif = android.media.ExifInterface(path)
+            val orientation = exif.getAttributeInt(
+                android.media.ExifInterface.TAG_ORIENTATION,
+                android.media.ExifInterface.ORIENTATION_NORMAL
+            )
+            val matrix = android.graphics.Matrix()
+            when (orientation) {
+                android.media.ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+                android.media.ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+                android.media.ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+                else -> return bitmap
+            }
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } catch (e: Exception) {
+            bitmap
+        }
+    }
+
+    private fun rotateBitmapIfRequired(bitmap: Bitmap, uri: android.net.Uri): Bitmap {
+        return try {
+            requireContext().contentResolver.openInputStream(uri)?.use { inputStream ->
+                val exif = android.media.ExifInterface(inputStream)
+                val orientation = exif.getAttributeInt(
+                    android.media.ExifInterface.TAG_ORIENTATION,
+                    android.media.ExifInterface.ORIENTATION_NORMAL
+                )
+                val matrix = android.graphics.Matrix()
+                when (orientation) {
+                    android.media.ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+                    android.media.ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+                    android.media.ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+                    else -> return bitmap
+                }
+                Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            } ?: bitmap
+        } catch (e: Exception) {
+            bitmap
+        }
+    }
+
     private fun takePhotoAndProcess() {
         val imageCapture = imageCapture ?: return
 
@@ -184,7 +226,8 @@ class ScannerFragment : Fragment() {
             ContextCompat.getMainExecutor(requireContext()),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    val bitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+                    val rawBitmap = BitmapFactory.decodeFile(photoFile.absolutePath)
+                    val bitmap = if (rawBitmap != null) rotateBitmapIfRequired(rawBitmap, photoFile.absolutePath) else null
                     if (bitmap != null) {
                         if (analyzeImageQuality(bitmap)) {
                             processPipelineImage(bitmap)
@@ -212,8 +255,10 @@ class ScannerFragment : Fragment() {
         
         try {
             val inputStream: InputStream? = requireContext().contentResolver.openInputStream(uri)
-            val bitmap = BitmapFactory.decodeStream(inputStream)
+            val rawBitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close()
+            
+            val bitmap = if (rawBitmap != null) rotateBitmapIfRequired(rawBitmap, uri) else null
             
             if (bitmap != null) {
                 if (analyzeImageQuality(bitmap)) {
@@ -294,11 +339,10 @@ class ScannerFragment : Fragment() {
             binding.scanLoadingOverlay.visibility = View.VISIBLE
             binding.loadingMessage.text = getString(R.string.uploading_to_ai_pipeline)
             fetchCurrentLocation()
-            val optimizedBitmap = compressAndResizeBitmap(confirmedBitmap)
             val penalty = if (isLeaf) 1.0f else 0.9f
             
             viewModel.processCapturedImage(
-                optimizedBitmap, 
+                confirmedBitmap, 
                 latitude, 
                 longitude, 
                 penalty, 
@@ -840,7 +884,12 @@ class ScannerFragment : Fragment() {
                             healthStatus = resource.data.healthStatus,
                             observations = resource.data.observations,
                             recommendations = resource.data.recommendations,
-                            assessmentMethod = resource.data.assessmentMethod
+                            assessmentMethod = resource.data.assessmentMethod,
+                            soilType = resource.data.soilType,
+                            soilPh = resource.data.soilPh,
+                            soilDrainage = resource.data.soilDrainage,
+                            soilRecommendation = resource.data.soilRecommendation,
+                            confidenceReason = resource.data.confidenceReason
                         )
                         putSerializable("disease_analysis_result", diseaseResult)
 
@@ -853,6 +902,12 @@ class ScannerFragment : Fragment() {
                         putString("observations", resource.data.observations)
                         putString("recommendations", resource.data.recommendations)
                         putString("assessment_method", resource.data.assessmentMethod)
+                        
+                        putString("soil_type", resource.data.soilType)
+                        putString("soil_ph", resource.data.soilPh)
+                        putString("soil_drainage", resource.data.soilDrainage)
+                        putString("soil_recommendation", resource.data.soilRecommendation)
+                        putString("confidence_reason", resource.data.confidenceReason)
                         
                         putString("crop_mode", resource.data.cropMode)
                         putString("crop_quality", resource.data.cropQuality)

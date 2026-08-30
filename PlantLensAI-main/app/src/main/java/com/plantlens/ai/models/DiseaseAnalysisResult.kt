@@ -15,38 +15,25 @@ data class DiseaseAnalysisResult(
     val healthStatus: String = "Healthy",
     val observations: String? = null,
     val recommendations: String? = null,
-    val assessmentMethod: String = "On-Device AI"
+    val assessmentMethod: String = "On-Device AI",
+    val soilType: String? = "Loamy soil",
+    val soilPh: String? = "6.0 - 7.0",
+    val soilDrainage: String? = "Well-drained",
+    val soilRecommendation: String? = "Mix garden soil with compost and sand.",
+    val confidenceReason: String? = null
 ) : Serializable {
 
     val isHealthy: Boolean
         get() {
-            val dName = diseaseName?.trim()?.lowercase() ?: ""
-            val isNoDiseaseNamed = dName.isEmpty() ||
-                dName.contains("none") ||
-                dName.contains("healthy") ||
-                dName.contains("no disease") ||
-                dName.contains("not detected") ||
-                dName.contains("optimal") ||
-                dName.contains("clean") ||
-                dName.contains("normal") ||
-                dName.contains("free of visible infection") ||
-                dName == "n/a"
-
-            val statusIsHealthy = healthStatus.lowercase().contains("healthy") ||
-                healthStatus.lowercase().contains("optimal") ||
-                healthStatus.lowercase().contains("normal")
-
-            return isNoDiseaseNamed || statusIsHealthy || (healthScore >= 75 && !hasCriticalDiseaseKeyword(dName))
+            val sev = severity?.trim()?.lowercase() ?: ""
+            return sev.contains("none") || sev.contains("optimal")
         }
 
-    private fun hasCriticalDiseaseKeyword(dName: String): Boolean {
-        return dName.contains("blight") || dName.contains("spot") || dName.contains("rust") ||
-               dName.contains("mildew") || dName.contains("rot") || dName.contains("wilt") ||
-               dName.contains("canker") || dName.contains("mosaic") || dName.contains("lesion")
-    }
-
     val isWarning: Boolean
-        get() = !isHealthy && (healthScore >= 50 || healthStatus.lowercase().contains("monitor") || healthStatus.lowercase().contains("attention") || healthStatus.lowercase().contains("mild"))
+        get() {
+            val sev = severity?.trim()?.lowercase() ?: ""
+            return !isHealthy && (sev.contains("low") || sev.contains("moderate") || sev.contains("medium"))
+        }
 
     val isCritical: Boolean
         get() = !isHealthy && !isWarning

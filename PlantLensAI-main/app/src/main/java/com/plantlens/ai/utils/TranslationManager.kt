@@ -16,6 +16,23 @@ object TranslationManager {
     // Cache for dynamic translations
     private val translationCache = LruCache<String, String>(500)
 
+    fun getCurrentLangCode(): String = currentLangCode
+
+    fun getCurrentLanguageName(): String {
+        return when (currentLangCode) {
+            "hi" -> "Hindi"
+            "ta" -> "Tamil"
+            "te" -> "Telugu"
+            "kn" -> "Kannada"
+            "ml" -> "Malayalam"
+            "mr" -> "Marathi"
+            "gu" -> "Gujarati"
+            "pa" -> "Punjabi"
+            "bn" -> "Bengali"
+            else -> "English"
+        }
+    }
+
     fun init(context: Context, langCode: String) {
         currentLangCode = langCode
         translationCache.evictAll()
@@ -170,6 +187,116 @@ object TranslationManager {
                 "touch_me_not" to "ਛੂਈ-ਮੂਈ"
             )
             else -> emptyMap()
+        }
+    }
+
+    fun translateSoilType(type: String): String {
+        if (currentLangCode == "en" || type.isBlank() || type == "N/A") return type
+        val lower = type.lowercase().trim()
+        return when (currentLangCode) {
+            "te" -> when {
+                lower.contains("loam") && lower.contains("sand") -> "ఇసుక లోమి మట్టి"
+                lower.contains("loam") && lower.contains("clay") -> "బంకమట్టి లోమి మట్టి"
+                lower.contains("loam") -> "లోమి మట్టి"
+                lower.contains("sand") -> "ఇసుక మట్టి"
+                lower.contains("clay") -> "బంకమట్టి"
+                else -> type
+            }
+            "hi" -> when {
+                lower.contains("loam") && lower.contains("sand") -> "बलुई दोमट मिट्टी"
+                lower.contains("loam") && lower.contains("clay") -> "चिकनी दोमट मिट्टी"
+                lower.contains("loam") -> "दोमट मिट्टी"
+                lower.contains("sand") -> "बलुई मिट्टी"
+                lower.contains("clay") -> "चिकनी मिट्टी"
+                else -> type
+            }
+            "ta" -> when {
+                lower.contains("loam") && lower.contains("sand") -> "மணல் கலந்த செம்மண்"
+                lower.contains("loam") -> "வண்டல் மண் / லோமி மண்"
+                lower.contains("sand") -> "மணல் மண்"
+                lower.contains("clay") -> "களிமண்"
+                else -> type
+            }
+            "kn" -> when {
+                lower.contains("loam") && lower.contains("sand") -> "ಮರಳು ಮಿಶ್ರಿತ ಗೋಡು ಮಣ್ಣು"
+                lower.contains("loam") -> "ಗೋಡು ಮಣ್ಣು"
+                lower.contains("sand") -> "ಮರಳು ಮಣ್ಣು"
+                lower.contains("clay") -> "ಜೇಡಿ ಮಣ್ಣು"
+                else -> type
+            }
+            else -> type
+        }
+    }
+
+    fun translateSoilDrainage(drainage: String): String {
+        if (currentLangCode == "en" || drainage.isBlank() || drainage == "N/A") return drainage
+        val lower = drainage.lowercase().trim()
+        return when (currentLangCode) {
+            "te" -> when {
+                lower.contains("well") -> "మంచి నీటి పారుదల"
+                lower.contains("moist") -> "తేమతో కూడిన పారుదల"
+                lower.contains("moderate") -> "మధ్యస్థ పారుదల"
+                else -> drainage
+            }
+            "hi" -> when {
+                lower.contains("well") -> "अच्छी जल निकासी"
+                lower.contains("moist") -> "नमी युक्त जल निकासी"
+                lower.contains("moderate") -> "मध्यम जल निकासी"
+                else -> drainage
+            }
+            "ta" -> when {
+                lower.contains("well") -> "நன்றாக வடிகட்டும்"
+                lower.contains("moist") -> "ஈரப்பதமான வடிகால்"
+                lower.contains("moderate") -> "மிதமான வடிகால்"
+                else -> drainage
+            }
+            "kn" -> when {
+                lower.contains("well") -> "ಉತ್ತಮ ಒಳಚರಂಡಿ"
+                lower.contains("moist") -> "ತೇವಾಂಶವುಳ್ಳ ಒಳಚರಂಡಿ"
+                lower.contains("moderate") -> "ಮಧ್ಯಮ ಒಳಚರಂಡಿ"
+                else -> drainage
+            }
+            else -> drainage
+        }
+    }
+
+    fun translateSeverity(severity: String): String {
+        if (currentLangCode == "en" || severity.isBlank() || severity == "N/A") return severity
+        val lower = severity.lowercase().trim()
+        return when (currentLangCode) {
+            "te" -> when {
+                lower.contains("critical") -> "అత్యవసరం (Critical)"
+                lower.contains("high") || lower.contains("severe") -> "అధికం (High)"
+                lower.contains("moderate") || lower.contains("medium") -> "మధ్యస్థం (Moderate)"
+                lower.contains("low") -> "తక్కువ (Low)"
+                lower.contains("optimal") || lower.contains("healthy") || lower.contains("none") -> "ఆరోగ్యకరం (Optimal)"
+                else -> severity
+            }
+            "hi" -> when {
+                lower.contains("critical") -> "अति गंभीर (Critical)"
+                lower.contains("high") || lower.contains("severe") -> "गंभीर (High)"
+                lower.contains("moderate") || lower.contains("medium") -> "मध्यम (Moderate)"
+                lower.contains("low") -> "हल्का (Low)"
+                lower.contains("optimal") || lower.contains("healthy") || lower.contains("none") -> "उत्तम (Optimal)"
+                else -> severity
+            }
+            "ta" -> when {
+                lower.contains("critical") -> "மிக தீவிரம் (Critical)"
+                lower.contains("high") || lower.contains("severe") -> "அதிக தீவிரம் (High)"
+                lower.contains("moderate") || lower.contains("medium") -> "மிதமானது (Moderate)"
+                lower.contains("low") -> "குறைவு (Low)"
+                lower.contains("optimal") || lower.contains("healthy") || lower.contains("none") -> "ஆரோக்கியமானது (Optimal)"
+                else -> severity
+            }
+            "kn" -> when {
+                lower.contains("critical") -> "ಅತ್ಯಂತ ತೀವ್ರ (Critical)"
+                lower.contains("high") || lower.contains("severe") -> "ಹೆಚ್ಚಿನ ತೀವ್ರತೆ (High)"
+                lower.contains("moderate") || lower.contains("medium") -> "ಮಧ್ಯಮ (Moderate)"
+                lower.contains("low") -> "ಕಡಿಮೆ (Low)"
+                lower.contains("optimal") || lower.contains("healthy") || lower.contains("none") -> "ಉತ್ತಮ (Optimal)"
+                else -> severity
+            }
+            else -> severity
         }
     }
 }

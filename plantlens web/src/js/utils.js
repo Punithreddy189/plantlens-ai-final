@@ -218,6 +218,23 @@ export function downloadReport(reportData) {
         </table>
       </div>
 
+      <div class="section">
+        <h3>🌱 Soil & Agronomy Recommendations</h3>
+        <table class="meta-table">
+          <tr><td><strong>Soil Type:</strong></td><td>${escapeHTML(reportData.soilType || reportData.soil_type || 'Loamy soil rich in organic matter')}</td></tr>
+          <tr><td><strong>Ideal pH Range:</strong></td><td>${escapeHTML(reportData.soilPh || reportData.soil_ph || '6.0 - 6.8')}</td></tr>
+          <tr><td><strong>Drainage Requirement:</strong></td><td>${escapeHTML(reportData.soilDrainage || reportData.soil_drainage || 'Well-drained with high aeration')}</td></tr>
+        </table>
+        ${(reportData.soilRecommendation || reportData.soil_recommendation) ? `
+          <div style="margin-top: 12px; padding: 12px; background: #E8F5E9; border-left: 4px solid #2E7D32; border-radius: 4px;">
+            <strong>🥣 Recommended Soil Mix Recipe:</strong>
+            <ul style="margin: 6px 0 0 0; padding-left: 20px;">
+              ${String(reportData.soilRecommendation || reportData.soil_recommendation).split('\n').filter(l => l.trim()).map(l => `<li>${escapeHTML(l.replace(/^[•\-\*]\s*/, ''))}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+      </div>
+
       <script>
         window.onload = function() { window.print(); }
       </script>

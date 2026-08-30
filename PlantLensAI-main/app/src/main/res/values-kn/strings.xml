@@ -264,4 +264,16 @@
     <string name="diagnosis_empty_message">ಈ ಸ್ಕ್ಯಾನ್‌ಗೆ ರೋಗನಿರ್ಣಯದ ಮಾಹಿತಿ ಲಭ್ಯವಿಲ್ಲ.</string>
     <string name="dialog_feedback_input_desc">ಡೇಟಾಬೇಸ್ ಕಲಿಯಲು ಸಸ್ಯದ ನಿಜವಾದ ಹೆಸರನ್ನು ತಿಳಿಸಿ.</string>
     <string name="dialog_feedback_input_hint">ನಿಜವಾದ ಸಸ್ಯದ ಹೆಸರು</string>
+
+    <!-- Soil & Agronomy Strings -->
+    <string name="soil_guide_title">🌱 ಮಣ್ಣು ಮತ್ತು ಕೃಷಿ ಮಾರ್ಗದರ್ಶಿ</string>
+    <string name="soil_type_label">🌍 ಪ್ರಕಾರ</string>
+    <string name="soil_ph_label">⚖️ pH ಮಟ್ಟ</string>
+    <string name="soil_drainage_label">💧 ಒಳಚರಂಡಿ</string>
+
+    <!-- Voice TTS Playback Strings -->
+    <string name="listen_label">ಆಲಿಸಿ</string>
+    <string name="stop_label">ನಿಲ್ಲಿಸಿ</string>
+    <string name="speaking_label">ಮಾತನಾಡುತ್ತಿದೆ...</string>
+    <string name="replay_label">ಮತ್ತೆ ಆಲಿಸಿ</string>
 </resources>

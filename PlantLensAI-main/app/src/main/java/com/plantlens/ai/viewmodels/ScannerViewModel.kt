@@ -33,6 +33,7 @@ import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import com.plantlens.ai.BuildConfig
+import com.plantlens.ai.utils.TranslationManager
 
 @HiltViewModel
 class ScannerViewModel @Inject constructor(
@@ -40,6 +41,7 @@ class ScannerViewModel @Inject constructor(
     private val classifier: TFLiteClassifier,
     private val analyticsManager: AnalyticsManager,
     private val firebaseManager: FirebaseManager,
+    private val diseaseApiService: com.plantlens.ai.network.PlantDiseaseApiService,
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -69,6 +71,11 @@ class ScannerViewModel @Inject constructor(
         val observations: String = "",
         val recommendations: String = "",
         val assessmentMethod: String = "Health Assessment Engine",
+        val soilType: String = "Loamy soil",
+        val soilPh: String = "6.0 - 7.0",
+        val soilDrainage: String = "Well-drained",
+        val soilRecommendation: String = "Mix garden soil with compost and sand.",
+        val confidenceReason: String = "Clear leaf morphology and distinct foliar characteristics.",
         
         // Added Developer Benchmark Telemetry
         val cropMode: String = "CENTER_CROP",
@@ -210,176 +217,6 @@ class ScannerViewModel @Inject constructor(
                     return@launch
                 }
 
-                // 1. PlantNet Request Optimization: Check local Room cache using image hash
-                val cachedRecord = plantRepository.getScanRecordByHash(imageHash)
-                if (cachedRecord != null && (System.currentTimeMillis() - cachedRecord.timestamp) < 24 * 60 * 60 * 1000) {
-                    Log.i(tag, "Local Room cache HIT for hash: $imageHash. Retrieving cached results without calling PlantNet.")
-                    
-                    // Increment cache hit count in Firestore
-                    val newUsage = usage.copy(todayScans = usage.todayScans + 1, cacheHits = usage.cacheHits + 1)
-                    firebaseManager.updateUserUsage(uid, newUsage)
-                    firebaseManager.incrementGlobalCounter("totalScans", 1L)
-                    firebaseManager.incrementGlobalCounter("cacheHits", 1L)
-                    firebaseManager.incrementGlobalCounter("requestsSaved", 1L)
-                    firebaseManager.incrementGlobalCounter("topPlants.${cachedRecord.plantName}", 1L)
-
-                    plantRepository.getPlantById(cachedRecord.plantId).collect { resource ->
-                        if (resource is Resource.Success) {
-                            val plant = resource.data
-                            val totalTime = detectionTimeMs + 10L
-                            trackScanAttempt(true, cachedRecord.confidence, totalTime)
-                            
-                            val sharedPref = context.getSharedPreferences("plantlens_analytics", Context.MODE_PRIVATE)
-                            val totalScans = sharedPref.getInt("analytics_total_scans", 0)
-                            val successScans = sharedPref.getInt("analytics_success_scans", 0)
-                            val rejectedScans = sharedPref.getInt("analytics_rejected_scans", 0)
-                            val avgConfidence = sharedPref.getFloat("analytics_avg_confidence", 0.0f)
-                            val avgTime = sharedPref.getLong("analytics_avg_time", 0L)
-
-                            val isCachedHealthy = cachedRecord.diseaseName.isBlank() ||
-                                cachedRecord.diseaseName.contains("None", true) ||
-                                cachedRecord.diseaseName.contains("Healthy", true) ||
-                                cachedRecord.diseaseName.contains("No disease", true) ||
-                                cachedRecord.diseaseName.contains("Optimal", true) ||
-                                cachedRecord.diseaseName.contains("Not detected", true)
-
-                            val scanResult = ScanResult(
-                                matchedPlant = plant,
-                                confidence = cachedRecord.confidence,
-                                top3Predictions = cachedRecord.top3Predictions,
-                                top3Confidences = cachedRecord.top3Confidences,
-                                healthScore = if (isCachedHealthy && cachedRecord.healthScore < 80) 95 else cachedRecord.healthScore,
-                                healthStatus = if (isCachedHealthy) "🟢 Healthy" else "⚠ Health Issue",
-                                diseaseName = if (isCachedHealthy) "None (Healthy Foliage)" else cachedRecord.diseaseName,
-                                diseaseConfidence = cachedRecord.diseaseConfidence,
-                                diseaseSeverity = if (isCachedHealthy) "None (Optimal)" else "Moderate",
-                                treatmentRecommendation = cachedRecord.treatmentRecommendation,
-                                observations = cachedRecord.treatmentRecommendation,
-                                recommendations = cachedRecord.treatmentRecommendation,
-                                temp = temp,
-                                humidity = humidity,
-                                windSpeed = windSpeed,
-                                rainProbability = rainProb,
-                                uvIndex = uvIndex,
-                                assessmentMethod = "Local Cache (SHA-256)",
-                                cropMode = cropMode,
-                                cropQuality = "Good",
-                                validationScore = validationScore,
-                                detectionTimeMs = detectionTimeMs,
-                                classificationTimeMs = 10L,
-                                top5CommonNames = listOf(plant.name) + cachedRecord.top3Predictions,
-                                top5ScientificNames = listOf(plant.scientificName) + cachedRecord.top3Predictions,
-                                top5Confidences = (listOf(cachedRecord.confidence) + cachedRecord.top3Confidences),
-                                analyticsTotalScans = totalScans,
-                                analyticsSuccessScans = successScans,
-                                analyticsRejectedScans = rejectedScans,
-                                analyticsAvgConfidence = avgConfidence,
-                                analyticsAvgTime = avgTime,
-                                family = cachedRecord.family,
-                                genus = cachedRecord.genus,
-                                imageHash = imageHash
-                            )
-
-                            withContext(Dispatchers.Main) {
-                                _scanState.value = Resource.Success(scanResult)
-                            }
-                        }
-                    }
-                    return@launch
-                }
-
-                // 2. Check Firestore global cache using image hash
-                val firestoreCache = firebaseManager.fetchScanCacheByHash(imageHash)
-                if (firestoreCache != null) {
-                    Log.i(tag, "Global Firestore cache HIT for hash: $imageHash. Fetching cached results without calling PlantNet.")
-                    
-                    // Increment cache hit count in Firestore
-                    val newUsage = usage.copy(todayScans = usage.todayScans + 1, cacheHits = usage.cacheHits + 1)
-                    firebaseManager.updateUserUsage(uid, newUsage)
-                    firebaseManager.incrementGlobalCounter("totalScans", 1L)
-                    firebaseManager.incrementGlobalCounter("cacheHits", 1L)
-                    firebaseManager.incrementGlobalCounter("requestsSaved", 1L)
-                    firebaseManager.incrementGlobalCounter("topPlants.${firestoreCache.plantName}", 1L)
-
-                    val plantId = firestoreCache.plantId
-                    val plant = Plant(
-                        id = plantId,
-                        name = firestoreCache.plantName,
-                        scientificName = firestoreCache.scientificName,
-                        category = "Indoor",
-                        wateringFrequency = 7,
-                        wateringInstructions = "Water every 7 days.",
-                        careTips = listOf("Keep in bright indirect light."),
-                        family = firestoreCache.family,
-                        genus = firestoreCache.genus
-                    )
-
-                    // Write to local database cache so it's populated locally
-                    plantRepository.savePlantToCache(plant)
-                    
-                    val localRecord = firestoreCache.copy(timestamp = System.currentTimeMillis())
-                    plantRepository.saveScanRecord(localRecord)
-
-                    val totalTime = detectionTimeMs + 50L
-                    trackScanAttempt(true, firestoreCache.confidence, totalTime)
-                    
-                    val sharedPref = context.getSharedPreferences("plantlens_analytics", Context.MODE_PRIVATE)
-                    val totalScans = sharedPref.getInt("analytics_total_scans", 0)
-                    val successScans = sharedPref.getInt("analytics_success_scans", 0)
-                    val rejectedScans = sharedPref.getInt("analytics_rejected_scans", 0)
-                    val avgConfidence = sharedPref.getFloat("analytics_avg_confidence", 0.0f)
-                    val avgTime = sharedPref.getLong("analytics_avg_time", 0L)
-
-                    val isCachedHealthy = firestoreCache.diseaseName.isBlank() ||
-                        firestoreCache.diseaseName.contains("None", true) ||
-                        firestoreCache.diseaseName.contains("Healthy", true) ||
-                        firestoreCache.diseaseName.contains("No disease", true) ||
-                        firestoreCache.diseaseName.contains("Optimal", true) ||
-                        firestoreCache.diseaseName.contains("Not detected", true)
-
-                    val scanResult = ScanResult(
-                        matchedPlant = plant,
-                        confidence = firestoreCache.confidence,
-                        top3Predictions = firestoreCache.top3Predictions,
-                        top3Confidences = firestoreCache.top3Confidences,
-                        healthScore = if (isCachedHealthy && firestoreCache.healthScore < 80) 95 else firestoreCache.healthScore,
-                        healthStatus = if (isCachedHealthy) "🟢 Healthy" else "⚠ Health Issue",
-                        diseaseName = if (isCachedHealthy) "None (Healthy Foliage)" else firestoreCache.diseaseName,
-                        diseaseConfidence = firestoreCache.diseaseConfidence,
-                        diseaseSeverity = if (isCachedHealthy) "None (Optimal)" else "Moderate",
-                        treatmentRecommendation = firestoreCache.treatmentRecommendation,
-                        observations = firestoreCache.treatmentRecommendation,
-                        recommendations = firestoreCache.treatmentRecommendation,
-                        temp = temp,
-                        humidity = humidity,
-                        windSpeed = windSpeed,
-                        rainProbability = rainProb,
-                        uvIndex = uvIndex,
-                        assessmentMethod = "Firestore Global Cache (SHA-256)",
-                        cropMode = cropMode,
-                        cropQuality = "Good",
-                        validationScore = validationScore,
-                        detectionTimeMs = detectionTimeMs,
-                        classificationTimeMs = 50L,
-                        top5CommonNames = listOf(plant.name) + firestoreCache.top3Predictions,
-                        top5ScientificNames = listOf(plant.scientificName) + firestoreCache.top3Predictions,
-                        top5Confidences = (listOf(firestoreCache.confidence) + firestoreCache.top3Confidences),
-                        analyticsTotalScans = totalScans,
-                        analyticsSuccessScans = successScans,
-                        analyticsRejectedScans = rejectedScans,
-                        analyticsAvgConfidence = avgConfidence,
-                        analyticsAvgTime = avgTime,
-                        family = firestoreCache.family,
-                        genus = firestoreCache.genus,
-                        imageHash = imageHash
-                    )
-
-                    withContext(Dispatchers.Main) {
-                        _scanState.value = Resource.Success(scanResult)
-                    }
-                    return@launch
-                }
-
                 // Using BuildConfig.PLANTNET_API_KEY for compatibility, though backend handles the keys securely
                 val apiKey = BuildConfig.PLANTNET_API_KEY
 
@@ -387,18 +224,19 @@ class ScannerViewModel @Inject constructor(
                 val cacheFile = File(context.cacheDir, "scan_upload_${System.currentTimeMillis()}.jpg")
                 withContext(Dispatchers.IO) {
                     val fos = FileOutputStream(cacheFile)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 95, fos)
                     fos.flush()
                     fos.close()
                 }
 
-                val requestFile = cacheFile.asRequestBody("image/jpeg".toMediaTypeOrNull())
-                val body = MultipartBody.Part.createFormData("images", cacheFile.name, requestFile)
+                // Prepare standard multipart payload using PlantLensImageUploader (1920px max, ARGB_8888, 90% JPEG)
+                val body = com.plantlens.ai.network.PlantLensImageUploader.prepareImagePayload(cacheFile)
 
                 val startTime = System.currentTimeMillis()
 
-                // Call remote FastAPI backend /classify endpoint
-                plantRepository.classifyPlantImage(body, apiKey).collect { resource ->
+                // Route through secure unified FastAPI backend gateway pipeline
+                val currentLanguage = TranslationManager.getCurrentLanguageName()
+                plantRepository.classifyPlantImage(body, apiKey, currentLanguage).collect { resource ->
                     when (resource) {
                         is Resource.Loading -> {
                             // Handled by fragment showing loading overlay
@@ -427,11 +265,13 @@ class ScannerViewModel @Inject constructor(
                                 return@collect
                             }
 
-                            val sName = response.scientific_name
-                            val cName = response.plant_name
+                            val sName = if (response.scientific_name.isNotBlank()) response.scientific_name else response.plant_name
+                            val cName = if (response.plant_name.isNotBlank()) response.plant_name else "Plant"
                             val confidenceVal = response.confidence.toFloat() * confidenceMultiplier
                             
-                            val plantId = sName.lowercase().replace(" ", "_").ifEmpty { "unknown_plant" }
+                            val plantId = sName.lowercase().replace(" ", "_").ifBlank { 
+                                cName.lowercase().replace(" ", "_").ifBlank { "plant_${System.currentTimeMillis()}" } 
+                            }
                             
                             // Parse watering frequency in days
                             val wateringFreq = parseWateringFrequency(response.watering)
@@ -456,65 +296,35 @@ class ScannerViewModel @Inject constructor(
                                 genus = ""
                             )
 
-                            // Cross-evaluate disease diagnosis with On-Device Botanical AI
-                            val onDeviceDiagnosis = classifier.diagnoseDisease(bitmap, cName)
-                            val isGeminiDiseased = !response.disease.contains("None", ignoreCase = true) && 
-                                    !response.disease.contains("Healthy", ignoreCase = true) && 
-                                    !response.disease.contains("No disease", ignoreCase = true) &&
-                                    !response.disease.contains("Optimal", ignoreCase = true) &&
-                                    !response.disease.contains("Not detected", ignoreCase = true) &&
-                                    !response.health_status.contains("Healthy", ignoreCase = true) &&
-                                    response.disease.isNotBlank()
+                            // Log API response from backend
+                            Log.e("FINAL_DEBUG", """
+                                PLANT: ${response.plant_name}
+                                DISEASE: ${response.disease}
+                                SEVERITY: ${response.severity}
+                                HEALTH: ${response.health_status}
+                            """.trimIndent())
+                            Log.d("API_RESPONSE", "ClassificationResponse: plant='${response.plant_name}', disease='${response.disease}', severity='${response.severity}', health_status='${response.health_status}', reason='${response.confidence_reason}'")
 
-                            val isOnDeviceDiseased = !onDeviceDiagnosis.diseaseName.contains("None", ignoreCase = true) &&
-                                    !onDeviceDiagnosis.diseaseName.contains("Healthy", ignoreCase = true) &&
-                                    onDeviceDiagnosis.healthScore < 75
+                            // Strict Normalization to match Web Output 1:1
+                            val rawDisease = response.disease.trim()
+                            val isHealthy = rawDisease.isBlank() ||
+                                    rawDisease.equals("none", ignoreCase = true) ||
+                                    rawDisease.equals("none (healthy plant)", ignoreCase = true) ||
+                                    rawDisease.equals("none (healthy foliage)", ignoreCase = true) ||
+                                    rawDisease.equals("healthy", ignoreCase = true) ||
+                                    rawDisease.equals("no disease", ignoreCase = true) ||
+                                    rawDisease.equals("no disease detected", ignoreCase = true) ||
+                                    rawDisease.equals("optimal", ignoreCase = true)
 
-                            val isDiseased = isGeminiDiseased || isOnDeviceDiseased
-
-                            val finalDiseaseName = when {
-                                isGeminiDiseased -> response.disease
-                                isOnDeviceDiseased -> onDeviceDiagnosis.diseaseName
-                                else -> "None (Healthy Foliage)"
-                            }
-
-                            val finalHealthStatus = when {
-                                isGeminiDiseased -> response.health_status.ifBlank { "Needs Attention" }
-                                isOnDeviceDiseased -> onDeviceDiagnosis.healthStatus
-                                else -> "🟢 Healthy"
-                            }
-
-                            val finalHealthScore = when {
-                                isGeminiDiseased -> if (response.health_status.lowercase(Locale.US).contains("critical")) 35 else 58
-                                isOnDeviceDiseased -> onDeviceDiagnosis.healthScore
-                                else -> 95
-                            }
-
-                            val finalTreatment = when {
-                                isGeminiDiseased && response.treatment.isNotBlank() -> response.treatment
-                                isOnDeviceDiseased -> onDeviceDiagnosis.treatmentRecommendation
-                                else -> if (response.treatment.isNotBlank()) response.treatment else onDeviceDiagnosis.treatmentRecommendation
-                            }
-
-                            val finalObservations = when {
-                                isGeminiDiseased && response.description.isNotBlank() -> response.description
-                                isOnDeviceDiseased -> onDeviceDiagnosis.observations
-                                else -> if (response.description.isNotBlank()) response.description else onDeviceDiagnosis.observations
-                            }
-
-                            val finalRecommendations = when {
-                                isGeminiDiseased && response.prevention.isNotBlank() -> response.prevention
-                                isOnDeviceDiseased -> onDeviceDiagnosis.recommendations
-                                else -> if (response.prevention.isNotBlank()) response.prevention else onDeviceDiagnosis.recommendations
-                            }
-
-                            val finalSeverity = when {
-                                !isDiseased -> "None (Optimal)"
-                                finalHealthScore < 50 -> "Severe"
-                                else -> "Moderate"
-                            }
-
-                            val finalMethod = if (isGeminiDiseased) "☁ Gemini 1.5 Flash Vision" else onDeviceDiagnosis.assessmentMethod
+                            val finalDiseaseName = rawDisease.ifBlank { if (isHealthy) "None (Healthy Plant)" else "Cercospora Leaf Spot / Early Blight" }
+                            val finalHealthStatus = if (isHealthy) "Healthy" else "Diseased"
+                            val finalSeverity = if (isHealthy) "None (Optimal)" else response.severity.ifBlank { "Moderate" }
+                            val finalHealthScore = response.health_score
+                            val finalDiseaseConfidence = if (response.confidence > 0.0) response.confidence.toFloat() else 0.95f
+                            val finalTreatment = response.treatment
+                            val finalObservations = response.description
+                            val finalRecommendations = response.prevention
+                            val finalMethod = response.assessment_method.ifBlank { "gemini-2.0-flash" }
 
                             val top3Names = listOf(cName)
                             val top3Confs = listOf(confidenceVal)
@@ -537,7 +347,7 @@ class ScannerViewModel @Inject constructor(
                                 top3Confidences = top3Confs,
                                 healthScore = finalHealthScore,
                                 diseaseName = finalDiseaseName,
-                                diseaseConfidence = 0.9f,
+                                diseaseConfidence = finalDiseaseConfidence,
                                 treatmentRecommendation = finalTreatment,
                                 latitude = latitude,
                                 longitude = longitude
@@ -573,7 +383,7 @@ class ScannerViewModel @Inject constructor(
                                 healthScore = finalHealthScore,
                                 healthStatus = finalHealthStatus,
                                 diseaseName = finalDiseaseName,
-                                diseaseConfidence = 0.9f,
+                                diseaseConfidence = finalDiseaseConfidence,
                                 diseaseSeverity = finalSeverity,
                                 treatmentRecommendation = finalTreatment,
                                 temp = temp,
@@ -584,6 +394,11 @@ class ScannerViewModel @Inject constructor(
                                 observations = finalObservations,
                                 recommendations = finalRecommendations,
                                 assessmentMethod = finalMethod,
+                                soilType = response.soil_type.ifEmpty { "Loamy soil" },
+                                soilPh = response.soil_ph.ifEmpty { "6.0 - 7.0" },
+                                soilDrainage = response.soil_drainage.ifEmpty { "Well-drained" },
+                                soilRecommendation = response.soil_recommendation.ifEmpty { "Mix garden soil with compost and sand." },
+                                confidenceReason = response.confidence_reason.ifEmpty { "Clear leaf venation and morphology." },
                                 cropMode = cropMode,
                                 cropQuality = if (validationScore > 80) "Excellent" else "Good",
                                 validationScore = validationScore,
