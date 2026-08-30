@@ -948,7 +948,10 @@ class ScannerFragment : Fragment() {
                 }
                 is Resource.Error -> {
                     binding.scanLoadingOverlay.visibility = View.GONE
-                    Toast.makeText(requireContext(), resource.message, Toast.LENGTH_LONG).show()
+                    val msg = resource.message?.takeIf { it.isNotBlank() } 
+                        ?: resource.exception.localizedMessage?.takeIf { it.isNotBlank() } 
+                        ?: "Diagnostic service unavailable. Please check your connection."
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_LONG).show()
                 }
             }
         }
