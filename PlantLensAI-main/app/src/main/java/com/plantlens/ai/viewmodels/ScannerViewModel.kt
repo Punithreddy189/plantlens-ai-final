@@ -429,8 +429,16 @@ class ScannerViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
+                Log.e(tag, "Scan pipeline error: ${e.message}", e)
                 withContext(Dispatchers.Main) {
-                    _scanState.value = Resource.Error(e, "Image processing failed: ${e.message}")
+                    _scanState.value = Resource.Error(e, "Connection failed: ${e.localizedMessage ?: "Server unreachable"}")
+                }
+            } finally {
+                // Ensure state is not left in loading if an unhandled completion or cancellation occurs
+                if (_scanState.value is Resource.Loading) {
+                    withContext(Dispatchers.Main) {
+                        _scanState.value = Resource.Error(Exception("Request timed out or cancelled"), "Server unreachable or request timed out.")
+                    }
                 }
             }
         }
